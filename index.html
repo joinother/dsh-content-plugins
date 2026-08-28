@@ -271,6 +271,26 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .typing span:nth-child(3){animation-delay:.4s}
 @keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
 
+/* User tabs */
+.tab-sep{width:1px;height:20px;background:var(--bd);margin:0 4px;flex-shrink:0}
+.tab-user{border-bottom-color:var(--purple,var(--accent))!important}
+.tab-user.active{background:linear-gradient(135deg,var(--accent),var(--purple,var(--accent)))!important;color:#fff!important}
+
+/* Feed cards */
+.feed-item{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:12px;overflow:hidden;animation:cardIn .3s var(--transition)}
+.feed-item-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd);background:var(--bg2)}
+.feed-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0}
+.feed-meta{font-size:11px;color:var(--dim)}
+.feed-badge{font-size:10px;padding:2px 6px;border-radius:4px;margin-left:auto}
+.feed-item-bdy{padding:12px 14px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.feed-item-ftr{display:flex;gap:12px;padding:6px 14px;border-top:1px solid var(--bd);font-size:12px;color:var(--dim)}
+.feed-item-ftr span{cursor:pointer;transition:color .2s}
+.feed-item-ftr span:hover{color:var(--accent)}
+.feed-adapted-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:var(--accent);color:#fff;margin-bottom:6px}
+.feed-original-toggle{font-size:11px;color:var(--dim);cursor:pointer;margin-top:6px}
+.feed-original-toggle:hover{color:var(--accent)}
+.feed-original{display:none;margin-top:6px;padding:8px;background:var(--bg2);border-radius:var(--r-s);font-size:12px;color:var(--dim)}
+
 </style>
 </head>
 <body>
@@ -308,6 +328,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
   <div class="tab" data-tab="quality" onclick="switchTab('quality')">质量评分<span class="num">7</span></div>
   <div class="tab" data-tab="abtest" onclick="switchTab('abtest')">A/B对比<span class="num">8</span></div>
   <div class="tab" data-tab="history" onclick="switchTab('history')">版本历史<span class="num">9</span></div>
+  <div class="tab-sep"></div>
+  <div class="tab tab-user" data-tab="userhome" onclick="switchTab('userhome')">用户主页<span class="num">U</span></div>
+  <div class="tab tab-user" data-tab="userfeed" onclick="switchTab('userfeed')">我的信息流<span class="num">F</span></div>
+  <div class="tab tab-user" data-tab="userprefs" onclick="switchTab('userprefs')">偏好设置<span class="num">P</span></div>
 </div>
 
 <div class="main">
@@ -575,6 +599,139 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
         <div class="card-hdr"><span class="ico">🔍</span> 版本详情</div>
         <div class="card-bdy" id="historyDetail">
           <div class="empty"><div class="ico">📋</div><div>选择左侧版本查看详情</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab U: 用户主页 (登录/注册 + Passkey) ═══ -->
+<div class="tab-content" id="tab-userhome">
+  <div class="banner"><span class="b-ico">👤</span><div><strong>用户主页</strong> · 注册/登录体验，支持 Passkey 通行密钥无密码登录</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card" id="authCard">
+        <div class="card-hdr"><span class="ico">🔐</span> 账号</div>
+        <div class="card-bdy" id="authBody">
+          <!-- 未登录状态 -->
+          <div id="authLoggedOut">
+            <div class="field"><label>用户名</label><input type="text" id="regUsername" placeholder="输入用户名" style="width:100%"></div>
+            <div class="field"><label>显示名</label><input type="text" id="regDisplay" placeholder="昵称（可选）" style="width:100%"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-p" onclick="userRegister()" style="flex:1">注册</button>
+              <button class="btn btn-s" onclick="userLogin()" style="flex:1">登录</button>
+            </div>
+            <div style="margin:12px 0;padding:8px;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);text-align:center">
+              <span style="font-size:11px;color:var(--dim)">— 或使用通行密钥 —</span>
+            </div>
+            <button class="btn btn-p" onclick="passkeyRegister()" style="width:100%;margin-bottom:8px">创建通行密钥 (Passkey)</button>
+            <button class="btn btn-s" onclick="passkeyLogin()" style="width:100%">用通行密钥登录</button>
+          </div>
+          <!-- 已登录状态 -->
+          <div id="authLoggedIn" style="display:none">
+            <div style="text-align:center;padding:16px 0">
+              <div id="userAvatar" style="width:64px;height:64px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 8px"></div>
+              <div id="userDisplayName" style="font-weight:600;font-size:16px"></div>
+              <div id="userUsername" style="font-size:12px;color:var(--dim)"></div>
+              <div id="userPasskeyBadge" style="margin-top:4px"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-s" onclick="switchTab('userfeed')" style="flex:1">查看信息流</button>
+              <button class="btn btn-s" onclick="switchTab('userprefs')" style="flex:1">偏好设置</button>
+            </div>
+            <button class="btn" onclick="userLogout()" style="width:100%;margin-top:8px;color:var(--red)">退出登录</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">ℹ️</span> 关于通行密钥</div>
+        <div class="card-bdy" style="font-size:13px;line-height:1.6">
+          <p style="margin-bottom:8px"><strong>Passkey</strong> 是基于 WebAuthn 标准的无密码认证方案：</p>
+          <ul style="padding-left:16px;margin-bottom:8px;color:var(--dim)">
+            <li>不存储密码，用设备生物识别(Touch ID/Face ID)验证</li>
+            <li>私钥存本地安全芯片，不可导出</li>
+            <li>抗钓鱼：只对注册域名生效</li>
+            <li>支持跨设备同步(iCloud 钥匙串/Google 密码管理)</li>
+          </ul>
+          <p style="color:var(--dim);font-size:12px">本 Demo 在浏览器本地存储用户数据(无后端)。Passkey 注册需要 HTTPS 或 localhost 环境。</p>
+          <div id="passkeySupport" style="margin-top:8px;padding:6px 10px;border-radius:var(--r-s);font-size:12px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab F: 我的信息流 (用户视角) ═══ -->
+<div class="tab-content" id="tab-userfeed">
+  <div class="banner"><span class="b-ico">📱</span><div><strong>我的信息流</strong> · 以用户视角浏览自适应内容流。每条内容按你的偏好实时适配。</div></div>
+  <div id="feedLoggedOutNotice" style="padding:24px;text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">🔒</div>
+    <div style="font-size:16px;margin-bottom:4px">请先登录</div>
+    <div style="font-size:12px;color:var(--dim);margin-bottom:12px">登录后即可体验个性化信息流</div>
+    <button class="btn btn-p" onclick="switchTab('userhome')">去登录</button>
+  </div>
+  <div id="feedContent" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-p" id="feedRefreshBtn" onclick="loadFeed()">刷新信息流</button>
+      <button class="btn btn-s" onclick="switchTab('userprefs')">调整偏好</button>
+      <span id="feedUserInfo" style="font-size:12px;color:var(--dim);margin-left:auto"></span>
+    </div>
+    <div id="feedList"></div>
+  </div>
+</div>
+
+<!-- ═══ Tab P: 偏好设置 (用户侧) ═══ -->
+<div class="tab-content" id="tab-userprefs">
+  <div class="banner"><span class="b-ico">⚙️</span><div><strong>偏好设置</strong> · 个性化你的信息流。调整后刷新信息流即可看到效果。</div></div>
+  <div id="prefsLoggedOutNotice" style="padding:24px;text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">🔒</div>
+    <div style="font-size:16px;margin-bottom:4px">请先登录</div>
+    <button class="btn btn-p" onclick="switchTab('userhome')">去登录</button>
+  </div>
+  <div id="prefsContent" style="display:none">
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="card-hdr"><span class="ico">🎨</span> 内容偏好</div>
+          <div class="card-bdy">
+            <div class="field"><label>语气偏好</label><select id="prefTone" style="width:100%"><option value="casual">随意口语</option><option value="formal">正式</option><option value="friendly">友善</option><option value="neutral">中性</option></select></div>
+            <div class="field"><label>详略偏好</label><select id="prefDetail" style="width:100%"><option value="brief">简短摘要</option><option value="normal">正常</option><option value="detailed">详细</option></select></div>
+            <div class="field"><label>排除情感</label>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" class="pref-exclude" value="negative"> 排除负面/负能量</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" class="pref-exclude" value="controversial"> 排除争议性内容</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" class="pref-exclude" value="angry"> 排除愤怒情绪</label>
+              </div>
+            </div>
+            <div class="field"><label>排除主题</label><input type="text" id="prefExcludeTopics" placeholder="如：政治、暴力、动物" style="width:100%"></div>
+            <div class="field"><label>只看主题（可选）</label><input type="text" id="prefOnlyTopics" placeholder="如：厨艺、科技、音乐" style="width:100%"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-hdr"><span class="ico">🤖</span> 自定义提示词</div>
+          <div class="card-bdy">
+            <div class="field"><label>你的个性化指令</label><textarea id="prefCustomPrompt" style="min-height:100px" placeholder="例如：我今天心情不好，请把所有内容都调整得轻松一些。或者：我正在学做饭，请把美食内容突出显示。"></textarea></div>
+            <div class="field"><label>适应级别</label>
+              <div class="levels" id="prefLevels">
+                <button data-l="off">关闭</button>
+                <button data-l="light">轻</button>
+                <button class="active" data-l="moderate">中</button>
+                <button data-l="aggressive">积极</button>
+              </div>
+            </div>
+            <button class="btn btn-p" onclick="savePrefs()" style="width:100%;margin-top:8px">保存偏好</button>
+            <div id="prefSaved" style="display:none;text-align:center;color:var(--green);font-size:12px;margin-top:6px">已保存！刷新信息流即可看到效果。</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="card-hdr"><span class="ico">📋</span> 当前偏好预览</div>
+          <div class="card-bdy" id="prefPreview" style="font-size:12px;color:var(--dim)">
+            登录后保存偏好即可看到预览
+          </div>
         </div>
       </div>
     </div>
@@ -1062,6 +1219,335 @@ function showVersion(id,el){
 function esc(text){const d=document.createElement('div');d.textContent=text??'';return d.innerHTML}
 
 // ═══════════════════════════════════════════════════════════
+//  User System: 账号 + Passkey + 信息流 + 偏好
+// ═══════════════════════════════════════════════════════════
+
+let currentUser=null;
+let userStore={}; // {username:{display,prefs,passkeyCredential}}
+
+function loadUserStore(){
+  try{userStore=JSON.parse(localStorage.getItem('cae_users')||'{}')}catch{userStore={}}
+  try{currentUser=JSON.parse(localStorage.getItem('cae_current_user')||'null')}catch{currentUser=null}
+}
+function saveUserStore(){localStorage.setItem('cae_users',JSON.stringify(userStore))}
+function saveCurrentUser(){localStorage.setItem('cae_current_user',JSON.stringify(currentUser))}
+
+const AVATAR_COLORS=['#f093fb','#4facfe','#43e97b','#fa709a','#fee140','#a18cd1','#fbc2eb','#a8edea','#ff9a9e','#ff6a88'];
+function avatarColor(name){return AVATAR_COLORS[name.charCodeAt(0)%AVATAR_COLORS.length]}
+function avatarInitial(name){return(name[0]||'?').toUpperCase()}
+
+// --- Passkey support detection ---
+function checkPasskeySupport(){
+  const el=document.getElementById('passkeySupport');
+  if(!el)return;
+  if(typeof PublicKeyCredential==='undefined'){
+    el.style.background='rgba(255,80,80,.1)';el.style.color='var(--red)';
+    el.textContent='此浏览器不支持 Passkey。请使用 Chrome 88+/Safari 16+/Firefox 122+。';
+    return false;
+  }
+  if(!window.isSecureContext){
+    el.style.background='rgba(255,160,0,.1)';el.style.color='var(--orange)';
+    el.textContent='当前非安全上下文(需 HTTPS 或 localhost)。Passkey 功能可能不可用。';
+    return false;
+  }
+  el.style.background='rgba(67,233,123,.1)';el.style.color='var(--green)';
+  el.textContent='Passkey 已就绪';
+  return true;
+}
+
+// --- Passkey registration ---
+async function passkeyRegister(){
+  const username=document.getElementById('regUsername').value.trim();
+  if(!username){showToast('请输入用户名','error');return}
+  if(!checkPasskeySupport())return;
+
+  const displayName=document.getElementById('regDisplay').value.trim()||username;
+
+  try{
+    const publicKey={
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'Content Adaptive Engine'},
+      user:{
+        id:new TextEncoder().encode(username),
+        name:username,
+        displayName:displayName,
+      },
+      pubKeyCredParams:[
+        {type:'public-key',alg:-7},   // ES256
+        {type:'public-key',alg:-257},  // RS256
+      ],
+      authenticatorSelection:{
+        authenticatorAttachment:'platform',
+        userVerification:'required',
+        residentKey:'preferred',
+      },
+      timeout:60000,
+    };
+
+    const credential=await navigator.credentials.create({publicKey});
+    // Store user with passkey
+    if(!userStore[username])userStore[username]={};
+    userStore[username].display=displayName;
+    userStore[username].hasPasskey=true;
+    userStore[username].credentialId=btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+    saveUserStore();
+
+    // Auto login
+    currentUser={username,display:displayName,hasPasskey:true};
+    saveCurrentUser();
+    updateAuthUI();
+    showToast('Passkey 创建成功！已自动登录','success');
+  }catch(e){
+    showToast('Passkey 创建失败: '+e.message,'error');
+  }
+}
+
+// --- Passkey login ---
+async function passkeyLogin(){
+  if(!checkPasskeySupport())return;
+  try{
+    const publicKey={
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      timeout:60000,
+      userVerification:'required',
+    };
+    const assertion=await navigator.credentials.get({publicKey});
+    // Find matching user
+    const credId=btoa(String.fromCharCode(...new Uint8Array(assertion.rawId)));
+    let matchedUser=null;
+    for(const[username,data]of Object.entries(userStore)){
+      if(data.credentialId===credId){matchedUser={username,display:data.display||username,hasPasskey:true};break}
+    }
+    if(!matchedUser){
+      // Allow login even if not matched (first time on this device)
+      const username=prompt('请输入与此 Passkey 关联的用户名:');
+      if(!username)return;
+      const data=userStore[username];
+      if(!data){showToast('未找到关联用户','error');return}
+      matchedUser={username,display:data.display||username,hasPasskey:true};
+    }
+    currentUser=matchedUser;
+    saveCurrentUser();
+    updateAuthUI();
+    showToast('Passkey 登录成功','success');
+  }catch(e){
+    if(e.name!=='NotAllowedError')showToast('Passkey 登录失败: '+e.message,'error');
+  }
+}
+
+// --- Username register ---
+function userRegister(){
+  const username=document.getElementById('regUsername').value.trim();
+  const display=document.getElementById('regDisplay').value.trim()||username;
+  if(!username){showToast('请输入用户名','error');return}
+  if(userStore[username]){showToast('用户名已存在','error');return}
+  userStore[username]={display,hasPasskey:false,prefs:defaultPrefs()};
+  saveUserStore();
+  currentUser={username,display,hasPasskey:false};
+  saveCurrentUser();
+  updateAuthUI();
+  showToast('注册成功！','success');
+}
+
+// --- Username login ---
+function userLogin(){
+  const username=document.getElementById('regUsername').value.trim();
+  if(!username){showToast('请输入用户名','error');return}
+  const data=userStore[username];
+  if(!data){showToast('用户不存在，请先注册','error');return}
+  currentUser={username,display:data.display||username,hasPasskey:!!data.hasPasskey};
+  saveCurrentUser();
+  updateAuthUI();
+  showToast('登录成功','success');
+}
+
+// --- Logout ---
+function userLogout(){
+  currentUser=null;
+  localStorage.removeItem('cae_current_user');
+  updateAuthUI();
+  showToast('已退出登录','info');
+}
+
+// --- Update auth UI ---
+function updateAuthUI(){
+  const loggedOut=document.getElementById('authLoggedOut');
+  const loggedIn=document.getElementById('authLoggedIn');
+  if(currentUser){
+    loggedOut.style.display='none';
+    loggedIn.style.display='block';
+    document.getElementById('userAvatar').style.background=avatarColor(currentUser.username);
+    document.getElementById('userAvatar').textContent=avatarInitial(currentUser.username);
+    document.getElementById('userDisplayName').textContent=currentUser.display;
+    document.getElementById('userUsername').textContent='@'+currentUser.username;
+    document.getElementById('userPasskeyBadge').innerHTML=currentUser.hasPasskey
+      ?'<span class="badge b-green" style="font-size:10px">Passkey 已绑定</span>'
+      :'<span class="badge b-cyan" style="font-size:10px">未绑定 Passkey</span>';
+    // Update feed and prefs visibility
+    document.getElementById('feedLoggedOutNotice').style.display='none';
+    document.getElementById('feedContent').style.display='block';
+    document.getElementById('prefsLoggedOutNotice').style.display='none';
+    document.getElementById('prefsContent').style.display='block';
+    document.getElementById('feedUserInfo').textContent=`@${currentUser.username} · 偏好已加载`;
+    loadPrefsToUI();
+  }else{
+    loggedOut.style.display='block';
+    loggedIn.style.display='none';
+    document.getElementById('feedLoggedOutNotice').style.display='block';
+    document.getElementById('feedContent').style.display='none';
+    document.getElementById('prefsLoggedOutNotice').style.display='block';
+    document.getElementById('prefsContent').style.display='none';
+  }
+}
+
+// --- Default prefs ---
+function defaultPrefs(){
+  return{tone:'casual',detail:'normal',excludeSentiments:[],excludeTopics:'',onlyTopics:'',customPrompt:'',level:'moderate'};
+}
+
+// --- Load prefs to UI ---
+function loadPrefsToUI(){
+  if(!currentUser)return;
+  const data=userStore[currentUser.username];
+  const prefs=data?.prefs||defaultPrefs();
+  document.getElementById('prefTone').value=prefs.tone||'casual';
+  document.getElementById('prefDetail').value=prefs.detail||'normal';
+  document.querySelectorAll('.pref-exclude').forEach(cb=>{
+    cb.checked=(prefs.excludeSentiments||[]).includes(cb.value);
+  });
+  document.getElementById('prefExcludeTopics').value=prefs.excludeTopics||'';
+  document.getElementById('prefOnlyTopics').value=prefs.onlyTopics||'';
+  document.getElementById('prefCustomPrompt').value=prefs.customPrompt||'';
+  document.querySelectorAll('#prefLevels button').forEach(b=>{
+    b.classList.toggle('active',b.dataset.l===(prefs.level||'moderate'));
+  });
+  updatePrefPreview();
+}
+
+// --- Save prefs ---
+function savePrefs(){
+  if(!currentUser){showToast('请先登录','error');return}
+  const prefs={
+    tone:document.getElementById('prefTone').value,
+    detail:document.getElementById('prefDetail').value,
+    excludeSentiments:[...document.querySelectorAll('.pref-exclude:checked')].map(cb=>cb.value),
+    excludeTopics:document.getElementById('prefExcludeTopics').value,
+    onlyTopics:document.getElementById('prefOnlyTopics').value,
+    customPrompt:document.getElementById('prefCustomPrompt').value,
+    level:document.querySelector('#prefLevels button.active')?.dataset.l||'moderate',
+  };
+  if(!userStore[currentUser.username])userStore[currentUser.username]={};
+  userStore[currentUser.username].prefs=prefs;
+  saveUserStore();
+  updatePrefPreview();
+  const saved=document.getElementById('prefSaved');
+  saved.style.display='block';
+  setTimeout(()=>saved.style.display='none',2000);
+  showToast('偏好已保存','success');
+}
+
+function updatePrefPreview(){
+  if(!currentUser)return;
+  const data=userStore[currentUser.username];
+  const prefs=data?.prefs||defaultPrefs();
+  const parts=[];
+  parts.push(`语气: ${prefs.tone}`);
+  parts.push(`详略: ${prefs.detail}`);
+  if(prefs.excludeSentiments?.length)parts.push(`排除情感: ${prefs.excludeSentiments.join('/')}`);
+  if(prefs.excludeTopics)parts.push(`排除主题: ${prefs.excludeTopics}`);
+  if(prefs.onlyTopics)parts.push(`只看: ${prefs.onlyTopics}`);
+  if(prefs.customPrompt)parts.push(`自定义: "${prefs.customPrompt.slice(0,30)}..."`);
+  parts.push(`适应级别: ${prefs.level||'moderate'}`);
+  document.getElementById('prefPreview').innerHTML=parts.map(p=>`<div style="padding:2px 0">• ${esc(p)}</div>`).join('');
+}
+
+// --- Pref levels handler ---
+document.getElementById('prefLevels')?.addEventListener('click',e=>{
+  if(e.target.dataset.l){
+    document.querySelectorAll('#prefLevels button').forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+  }
+});
+
+// --- Mock feed content ---
+const MOCK_FEED=[
+  {author:'科技控',avatar:'#4facfe',time:'2分钟前',content:'这个新出的AI芯片简直是垃圾，跑分还不如上一代，价格倒是涨了30%，纯割韭菜！大家千万别买。'},
+  {author:'美食日记',avatar:'#fa709a',time:'5分钟前',content:'今天做了红烧肉，用冰糖炒色比白糖好太多！秘诀是小火慢炖40分钟，肉入口即化。配上米饭简直绝了，大家试试看。'},
+  {author:'数码评测君',avatar:'#f093fb',time:'8分钟前',content:'刚拿到新手机，拍照效果白天不错但夜景一般，电池续航还行能撑一天。系统偶尔卡顿，总体性价比中等偏上。'},
+  {author:'愤怒的消费者',avatar:'#ff6a88',time:'12分钟前',content:'客服简直是有病！问了三个问题一个都答不上来，还态度恶劣挂我电话。这种公司迟早倒闭，建议大家避雷！'},
+  {author:'旅行达人',avatar:'#43e97b',time:'15分钟前',content:'云南之行太棒了！大理的洱海日出、丽江的古城夜景、香格里拉的雪山，每一处都让人心旷神怡。强烈推荐淡季去，人少景美。'},
+  {author:'职场观察',avatar:'#a18cd1',time:'20分钟前',content:'最近公司裁员闹得人心惶惶，听说技术部要砍一半。这种时候与其焦虑不如提升自己，大家觉得呢？还是说应该趁早跑路？'},
+];
+
+async function loadFeed(){
+  if(!currentUser)return;
+  const btn=document.getElementById('feedRefreshBtn');
+  btn.disabled=true;btn.textContent='加载中...';
+  const feedList=document.getElementById('feedList');
+  feedList.innerHTML='<div class="loading"><div class="spinner"></div>正在为你适配内容...</div>';
+
+  const data=userStore[currentUser.username];
+  const prefs=data?.prefs||defaultPrefs();
+  const rules=document.getElementById('adminRules')?.value||'';
+  const vibe=document.getElementById('adminVibe')?.value||'';
+
+  // If adaptation is off, show raw content
+  if(prefs.level==='off'){
+    feedList.innerHTML=MOCK_FEED.map(item=>renderFeedItem(item,item.content,false)).join('');
+    btn.disabled=false;btn.textContent='刷新信息流';
+    return;
+  }
+
+  // Adapt each item
+  const adapted=[];
+  for(const item of MOCK_FEED){
+    try{
+      const userObj={
+        name:currentUser.display,
+        tone:prefs.tone,
+        detail:prefs.detail,
+        excludeSentiments:prefs.excludeSentiments||[],
+        excludeTopics:prefs.excludeTopics||'',
+        onlyTopics:prefs.onlyTopics||'',
+        customPrompt:prefs.customPrompt||'',
+        time:new Date().getHours()<6?'night':new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'night',
+      };
+      const result=await adaptForUser(item.content,userObj,rules,vibe,prefs.level||'moderate');
+      adapted.push({...item,adaptedContent:result.content,adapted:true,changes:result.changes||[]});
+    }catch(e){
+      adapted.push({...item,adaptedContent:item.content,adapted:false,changes:[]});
+    }
+  }
+
+  feedList.innerHTML=adapted.map(item=>renderFeedItem(item,item.adaptedContent||item.content,item.adapted,item.changes)).join('');
+  // Record versions
+  adapted.forEach(item=>{
+    if(item.adapted)recordVersion('用户信息流',item.content,item.adaptedContent,`@${currentUser.username}`,item.changes);
+  });
+  btn.disabled=false;btn.textContent='刷新信息流';
+}
+
+function renderFeedItem(item,content,adapted,changes){
+  const adaptTag=adapted?'<span class="feed-adapted-tag">已适配</span>':'';
+  const originalSection=adapted?`<div class="feed-original-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">查看原文</div><div class="feed-original">${esc(item.content)}</div>`:'';
+  const changeCount=changes?.length||0;
+  return `<div class="feed-item">
+    <div class="feed-item-hdr">
+      <div class="feed-avatar" style="background:${item.avatar}">${avatarInitial(item.author)}</div>
+      <div><div style="font-size:13px;font-weight:600">${esc(item.author)}</div><div class="feed-meta">${esc(item.time)}${changeCount?` · ${changeCount}处适配`:''}</div></div>
+    </div>
+    <div class="feed-item-bdy">
+      ${adaptTag}
+      ${esc(content)}
+      ${originalSection}
+    </div>
+    <div class="feed-item-ftr">
+      <span>👍 赞</span><span>💬 评论</span><span>↗ 分享</span>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
 //  Tab 6: 策略网关 (借鉴 Abliteration.ai)
 // ═══════════════════════════════════════════════════════════
 
@@ -1299,6 +1785,11 @@ updateApiStatus();renderMuUsers();
 setupLevels('muLevels',()=>document.querySelectorAll('#muLevels button').forEach(b=>b.classList.toggle('active',b.dataset.l===currentLevel)));
 setupLevels('tlLevels',()=>document.querySelectorAll('#tlLevels button').forEach(b=>b.classList.toggle('active',b.dataset.l===currentLevel)));
 setupLevels('adminLevels',()=>document.querySelectorAll('#adminLevels button').forEach(b=>b.classList.toggle('active',b.dataset.l===currentLevel)));
+
+// User system init
+loadUserStore();
+checkPasskeySupport();
+updateAuthUI();
 </script>
 </body>
 </html>
