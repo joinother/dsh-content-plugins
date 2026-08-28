@@ -98,7 +98,53 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid-side{display:grid;grid-template-columns:280px 1fr;gap:14px}
 .grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-@media(max-width:768px){.grid-2,.grid-side{grid-template-columns:1fr}.grid-3{grid-template-columns:1fr}}
+/* ─── Mobile Responsive ─── */
+@media(max-width:768px){
+  .hdr{padding:8px 12px;gap:8px;flex-wrap:wrap}
+  .hdr-logo{flex:1}
+  .hdr h1{font-size:13px}
+  .hdr h1 span{display:none}
+  .hdr-right{width:100%}
+  .api-bar{width:100%;flex:1}
+  .api-bar input{width:100%;flex:1}
+  .tabs{padding:0 8px;top:41px;-webkit-overflow-scrolling:touch}
+  .tab{padding:8px 12px;font-size:12px}
+  .tab .num{display:none}
+  .main{padding:12px}
+  .grid-2,.grid-side,.grid-3{grid-template-columns:1fr}
+  .card-hdr{padding:8px 12px;font-size:12px}
+  .card-bdy{padding:10px}
+  .field textarea,.field input,.field select{font-size:13px;padding:10px 12px}
+  .field textarea{min-height:60px}
+  .btn{padding:10px 16px;font-size:13px}
+  .seg{padding:8px 10px}
+  .seg-txt{font-size:12px}
+  .rc-hdr{padding:6px 10px}
+  .rc-name{font-size:12px}
+  .rc-meta{font-size:10px}
+  .rc-bdy{padding:8px 10px}
+  .levels button{padding:8px 4px;font-size:10px}
+  .times button{padding:5px 2px;font-size:9px}
+  .banner{padding:8px 12px;font-size:11px}
+  .pipe-num{width:24px;height:24px;font-size:11px}
+  .pipe-title{font-size:12px}
+  .timeline{padding-left:24px}
+  .tl-item::before{left:-20px}
+  .suggest-box{padding:10px}
+  .violation{padding:6px 8px}
+  .ver-entry{padding:6px 8px}
+  .empty{padding:30px 12px}
+  .empty .ico{font-size:28px}
+  .loading{padding:20px}
+  .toast{bottom:16px;right:12px;left:12px;text-align:center}
+}
+@media(max-width:380px){
+  .hdr h1{font-size:12px}
+  .tab{padding:6px 8px;font-size:11px}
+  .levels button{font-size:9px}
+  .api-bar select{font-size:11px}
+  .api-connect{padding:4px 8px;font-size:10px}
+}
 
 /* ─── Segments ─── */
 .seg{background:var(--bg2);border-radius:var(--r-s);padding:10px 12px;margin-bottom:8px;border-left:3px solid transparent;transition:all .3s var(--transition);animation:slideIn .4s var(--transition)}
