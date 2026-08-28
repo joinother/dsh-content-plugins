@@ -537,19 +537,75 @@ async function callLLM(messages,opts={}){
   const res=await fetch(p.base,{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-    body:JSON.stringify({model:opts.model||p.model,messages,temperature:opts.temperature??0.4,max_tokens:opts.maxTokens??4096}),
+    body:JSON.stringify({model:opts.model||p.model,messages,temperature:opts.temperature??0.4,max_tokens:opts.maxTokens??8192}),
   });
   if(!res.ok) throw new Error(`API ${res.status}: ${(await res.text()).slice(0,100)}`);
   const data=await res.json();
-  return data.choices?.[0]?.message?.content??'';
+  const choice=data.choices?.[0];
+  const content=choice?.message?.content??'';
+  const finishReason=choice?.finish_reason??'stop';
+  // If truncated by token limit, retry with higher max_tokens
+  if(finishReason==='length'){
+    console.warn('Response truncated (finish_reason=length), retrying with higher max_tokens');
+    const retryRes=await fetch(p.base,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:opts.model||p.model,messages,temperature:opts.temperature??0.4,max_tokens:16384}),
+    });
+    if(retryRes.ok){
+      const retryData=await retryRes.json();
+      return retryData.choices?.[0]?.message?.content??content;
+    }
+  }
+  return content;
+}
+
+function tryParseJSON(raw){
+  // Strip markdown code blocks
+  let text=raw.replace(/^```(?:json)?\s*\n?/i,'').replace(/\n?```\s*$/,'').trim();
+  // Try direct parse
+  try{return JSON.parse(text)}catch{}
+  // Extract first { ... } block
+  const m=text.match(/\{[\s\S]*\}/);
+  if(m){
+    try{return JSON.parse(m[0])}catch{}
+    // Try to fix truncated JSON: close missing brackets
+    let fragment=m[0];
+    // Count open vs close for {} and []
+    const opens=(fragment.match(/[{[]/g)||[]).length;
+    const closes=(fragment.match(/[}\]]/g)||[]).length;
+    const missing=opens-closes;
+    if(missing>0){
+      // Append missing closing brackets
+      fragment=fragment.trimEnd();
+      // Remove trailing incomplete key-value (e.g. "after":"xxx without closing quote)
+      fragment=fragment.replace(/,\s*$/,'');
+      // Try adding closing quotes and brackets
+      for(let i=0;i<missing;i++){
+        // Check if we need a quote before the bracket
+        const lastChar=fragment[fragment.length-1];
+        if(lastChar!==']'&&lastChar!=='}'&&lastChar!=='"'){
+          // Check if inside a string value
+          const quoteCount=(fragment.match(/"/g)||[]).length;
+          if(quoteCount%2===1)fragment+='"';
+        }
+        // Determine if we need ] or }
+        const openBraces=(fragment.match(/{/g)||[]).length;
+        const closeBraces=(fragment.match(/}/g)||[]).length;
+        const openBrackets=(fragment.match(/\[/g)||[]).length;
+        const closeBrackets=(fragment.match(/\]/g)||[]).length;
+        if(openBrackets>closeBrackets)fragment+=']';
+        else if(openBraces>closeBraces)fragment+='}';
+      }
+      try{return JSON.parse(fragment)}catch{}
+    }
+  }
+  throw new Error('JSON parse failed: '+text.slice(0,120));
 }
 
 async function callLLMJSON(messages,opts={}){
   let raw=await callLLM(messages,opts);
-  raw=stripMarkdown(raw); // FIX: strip markdown code blocks
-  const m=raw.match(/\{[\s\S]*\}/);
-  if(!m) throw new Error('No JSON in response: '+raw.slice(0,100));
-  return JSON.parse(m[0]);
+  return tryParseJSON(raw);
 }
 
 function mockLLM(messages,opts){
@@ -746,10 +802,20 @@ async function runMultiUser(){
 async function adaptForUser(content,user,rules,vibe,level){
   const ctx=`用户: ${user.name}\n偏好语气: ${user.tone}\n偏好详略: ${user.detail}\n时间: ${user.time}\n${user.excludeSentiments.length?'排除情感: '+user.excludeSentiments.join(',')+'\n':''}${user.customPrompt?'自定义: '+user.customPrompt+'\n':''}${user.time==='night'?'注意: 夜间浏览，偏好轻松简短\n':''}${user.time==='morning'?'注意: 早晨，偏好信息密度高\n':''}`;
   const result=await callLLMJSON([
-    {role:'system',content:`你是一个内容自适应引擎。根据用户上下文调整文本内容。必须返回改写后的完整内容，不能为空。\n${rules}\n${vibe}\n\n用户上下文：\n${ctx}\n适应级别: ${level}\noff=原样返回, light=微调语气, moderate=调整语气/详略/侧重, aggressive=大幅重构\n\n返回JSON: {"content":"改写后的完整内容","changes":[{"field":"","before":"","after":"","reason":""}],"adaptationReason":""}\n只输出JSON，不要markdown代码块。`},
+    {role:'system',content:`你是一个内容自适应引擎。根据用户上下文调整文本内容。必须返回改写后的完整内容，不能为空。\n${rules}\n${vibe}\n\n用户上下文：\n${ctx}\n适应级别: ${level}\noff=原样返回, light=微调语气, moderate=调整语气/详略/侧重, aggressive=大幅重构\n\n返回JSON: {"content":"改写后的完整内容","changes":[{"field":"content","before":"原文片段","after":"改后片段","reason":"原因"}],"adaptationReason":"说明"}\n只输出JSON，不要markdown代码块。\n重要：content字段必须包含改写后的完整文本，不能为空字符串。`},
     {role:'user',content:`原文：${content}`}
-  ],{temperature:0.4});
+  ],{temperature:0.4,maxTokens:8192});
+  // FIX: ensure content is never empty
   if(!result.content||!result.content.trim())result.content=content;
+  // FIX: normalize changes keys (model sometimes uses 'original'/'replacement' instead of 'before'/'after')
+  if(result.changes&&Array.isArray(result.changes)){
+    result.changes=result.changes.map(c=>({
+      field:c.field||'content',
+      before:c.before||c.original||'',
+      after:c.after||c.replacement||c.suggestion||'',
+      reason:c.reason||''
+    })).filter(c=>c.before||c.after);
+  }
   return result;
 }
 
