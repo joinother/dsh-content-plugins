@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Adaptive Engine - 多模态内容动态自适应演示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0f1117;
+    --panel: #1a1d27;
+    --panel-hover: #222631;
+    --border: #2a2e3a;
+    --text: #e0e0e0;
+    --text-dim: #888;
+    --accent: #6c7ee1;
+    --accent-dim: #4a5599;
+    --green: #5cb85c;
+    --orange: #f0ad4e;
+    --red: #d9534f;
+    --purple: #9b59b6;
+    --radius: 8px;
+  }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .header h1 span { color: var(--accent); }
+  .header-actions { display: flex; gap: 12px; align-items: center; }
+  .mode-toggle {
+    display: flex;
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid var(--border);
+  }
+  .mode-toggle button {
+    padding: 4px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .mode-toggle button.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* ─── Layout ─── */
+  .main {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+    padding: 16px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* ─── Sidebar (Admin Panel) ─── */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 10px 14px;
+    background: var(--panel-hover);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-header .icon { font-size: 14px; }
+  .card-body { padding: 12px 14px; }
+
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .field textarea, .field input, .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .field textarea { min-height: 60px; }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .adapt-levels { display: flex; gap: 4px; }
+  .adapt-levels button {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-dim);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .adapt-levels button.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  /* ─── Users Panel ─── */
+  .users-list { display: flex; flex-direction: column; gap: 8px; }
+  .user-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .user-item:hover { border-color: var(--accent-dim); }
+  .user-item.active { border-color: var(--accent); background: rgba(108, 126, 225, 0.08); }
+  .user-item .user-name { font-size: 12px; font-weight: 600; }
+  .user-item .user-pref { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .user-item .user-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    margin-top: 4px;
+  }
+  .badge-green { background: rgba(92, 184, 92, 0.2); color: var(--green); }
+  .badge-orange { background: rgba(240, 173, 78, 0.2); color: var(--orange); }
+  .badge-purple { background: rgba(155, 89, 182, 0.2); color: var(--purple); }
+  .badge-blue { background: rgba(108, 126, 225, 0.2); color: var(--accent); }
+
+  /* ─── Content Area ─── */
+  .content-area { display: flex; flex-direction: column; gap: 16px; }
+
+  .content-input textarea {
+    min-height: 100px;
+    font-size: 13px;
+  }
+
+  .sample-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sample-btn {
+    padding: 4px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .sample-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .btn-primary {
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #5a6fc7; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    padding: 6px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* ─── Results ─── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .result-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .result-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .result-header .user-tag {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .result-header .time-tag {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .result-body { padding: 12px 14px; }
+  .segment-block {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid transparent;
+  }
+  .segment-block:last-child { margin-bottom: 0; }
+  .segment-block.changed { border-left-color: var(--orange); }
+  .segment-block.removed { border-left-color: var(--red); }
+  .segment-block.added { border-left-color: var(--green); }
+  .segment-id { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+  .segment-text { font-size: 13px; }
+  .segment-changes {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .change-item {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+  .change-item .before { color: var(--red); text-decoration: line-through; }
+  .change-item .after { color: var(--green); }
+  .result-footer {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ─── Time Selector ─── */
+  .time-selector { display: flex; gap: 4px; margin-top: 6px; }
+  .time-btn {
+    flex: 1;
+    padding: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-dim);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    transition: all 0.2s;
+  }
+  .time-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* ─── Loading ─── */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-dim);
+  }
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Diff View ─── */
+  .diff-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .diff-toggle input { cursor: pointer; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state .big-icon { font-size: 48px; margin-bottom: 12px; }
+
+  .api-key-field {
+    display: flex;
+    gap: 6px;
+  }
+  .api-key-field input { flex: 1; }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .status-dot.online { background: var(--green); }
+  .status-dot.offline { background: var(--text-dim); }
+
+  .comparison-banner {
+    background: linear-gradient(135deg, rgba(108, 126, 225, 0.15), rgba(155, 89, 182, 0.1));
+    border: 1px solid var(--accent-dim);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .comparison-banner strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Content Adaptive Engine <span>· 多模态内容动态自适应</span></h1>
+  <div class="header-actions">
+    <div class="mode-toggle">
+      <button id="modeMock" class="active" onclick="switchMode('mock')">Mock 模式</button>
+      <button id="modeLive" onclick="switchMode('live')">Live API</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- ─── Sidebar: Admin Panel ─── -->
+  <div class="sidebar">
+
+    <!-- API Config -->
+    <div class="card" id="apiCard" style="display:none;">
+      <div class="card-header"><span class="icon">🔑</span> DeepSeek API</div>
+      <div class="card-body">
+        <div class="field">
+          <label>API Key</label>
+          <div class="api-key-field">
+            <input type="password" id="apiKey" placeholder="sk-xxx" />
+            <button class="btn-secondary" onclick="testApi()">测试</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>状态: <span id="apiStatus"><span class="status-dot offline"></span> 未连接</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Rules -->
+    <div class="card">
+      <div class="card-header"><span class="icon">📋</span> 平台规则 (管理员)</div>
+      <div class="card-body">
+        <div class="field">
+          <label>内容规则提示词</label>
+          <textarea id="platformRules">平台内容规则：
+1. 禁止人身攻击、侮辱、谩骂
+2. 禁止虚假信息和恶意造谣
+3. 禁止泄露他人隐私
+4. 禁止煽动仇恨和歧视
+5. 禁止低俗色情内容
+6. 鼓励理性、建设性的讨论</textarea>
+        </div>
+        <div class="field">
+          <label>社区氛围提示词</label>
+          <textarea id="communityVibe">社区氛围设定：
+- 友善、包容、理性
+- 鼓励多元观点但反对恶意攻击
+- 对新手友好，乐于解答
+- 讨论以事实为依据</textarea>
+        </div>
+        <div class="field">
+          <label>适应级别</label>
+          <div class="adapt-levels">
+            <button onclick="setAdaptLevel('off')" data-level="off">关闭</button>
+            <button onclick="setAdaptLevel('light')" data-level="light">轻度</button>
+            <button class="active" onclick="setAdaptLevel('moderate')" data-level="moderate">中度</button>
+            <button onclick="setAdaptLevel('aggressive')" data-level="aggressive">积极</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div class="card">
+      <div class="card-header"><span class="icon">👥</span> 用户列表</div>
+      <div class="card-body">
+        <div class="users-list" id="usersList"></div>
+        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="addUser()">+ 添加用户</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Content Area ─── -->
+  <div class="content-area">
+
+    <!-- Content Input -->
+    <div class="card content-input">
+      <div class="card-header">
+        <span class="icon">📝</span> 内容输入
+        <span style="margin-left:auto;font-size:11px;color:var(--text-dim);">输入要测试的内容，然后点击渲染</span>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <textarea id="contentInput" placeholder="输入内容... 可以是一段产品评价、一条讨论帖、或任何用户生成内容。">这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买，买了就是扔钱！不过说实话，它的外观确实还行，颜色搭配挺好看的，如果质量能跟上就完美了。</textarea>
+        </div>
+        <div class="field">
+          <label>快速示例</label>
+          <div class="sample-btns">
+            <button class="sample-btn" onclick="loadSample('product')">产品评价</button>
+            <button class="sample-btn" onclick="loadSample('policy')">政策讨论</button>
+            <button class="sample-btn" onclick="loadSample('emotion')">情绪宣泄</button>
+            <button class="sample-btn" onclick="loadSample('tech')">技术分享</button>
+            <button class="sample-btn" onclick="loadSample('conflict')">冲突帖</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px;">
+          <button class="btn-primary" id="renderBtn" onclick="renderAll()">渲染全部用户</button>
+          <button class="btn-secondary" onclick="clearResults()">清空结果</button>
+          <label class="diff-toggle" style="margin-left:auto;">
+            <input type="checkbox" id="showDiff" checked> 显示变更详情
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsSection">
+      <div class="empty-state" id="emptyState">
+        <div class="big-icon">🎨</div>
+        <div>点击「渲染全部用户」查看效果</div>
+        <div style="font-size:12px;margin-top:4px;">同一条内容将为每个用户生成不同的个性化版本</div>
+      </div>
+      <div id="resultsContent" style="display:none;">
+        <div class="comparison-banner" style="margin-bottom:14px;">
+          <span>📊</span>
+          <span>同一内容 · <strong id="userCountLabel">0</strong> 个用户 · <strong id="versionLabel">0</strong> 个版本</span>
+        </div>
+        <div class="results-grid" id="resultsGrid"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════════
+
+let mode = 'mock'; // 'mock' | 'live'
+let adaptLevel = 'moderate';
+let apiKey = '';
+let apiConnected = false;
+let users = createDefaultUsers();
+let versionCounter = 0;
+
+const SAMPLES = {
+  product: '这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买，买了就是扔钱！不过说实话，它的外观确实还行，颜色搭配挺好看的，如果质量能跟上就完美了。',
+  policy: '关于这个新政策，有人支持有人反对。支持的人认为这能促进市场竞争，反对的人担心小企业会被挤垮。我个人觉得两方都有道理。另外，从技术角度看，这个政策涉及的合规成本不低，中小企业可能需要额外投入20-30%的IT预算来满足要求。',
+  emotion: '今天心情差到极点，什么都不想做，感觉所有的努力都白费了。为什么生活总是这么难？有没有人能告诉我，这一切到底有什么意义？',
+  tech: 'React 19的新Compiler自动memoizes组件，性能基准测试显示30%的提升。关键是它完全向后兼容，不需要改现有代码。配合Server Components使用效果更佳，但要注意hydration的边界情况。',
+  conflict: '你们这些用iPhone的就是被割韭菜还帮人数钱，花一万块买个信号差的要命的东西还好意思炫耀？安卓随便一台三千块的性能都吊打你们。别跟我扯什么生态，那就是苹果的围墙花园，锁死你们而已。',
+};
+
+function createDefaultUsers() {
+  return [
+    {
+      id: 'user-a',
+      name: '小明',
+      avatar: '👤',
+      tone: 'casual',
+      detail: 'normal',
+      customPrompt: '我是普通消费者，想看真实的产品评价',
+      time: 'morning',
+      excludeSentiments: [],
+      includeTopics: [],
+    },
+    {
+      id: 'user-b',
+      name: '小红',
+      avatar: '👩',
+      tone: 'casual',
+      detail: 'brief',
+      customPrompt: '我今天心情不好，不想看到负能量和负面评价，只想看积极的内容',
+      time: 'night',
+      excludeSentiments: ['negative', 'controversial'],
+      includeTopics: [],
+    },
+    {
+      id: 'user-c',
+      name: '产品经理老王',
+      avatar: '👨‍💼',
+      tone: 'formal',
+      detail: 'detailed',
+      customPrompt: '我是产品经理，需要客观详细的产品反馈信息，用于改进产品',
+      time: 'morning',
+      excludeSentiments: [],
+      includeTopics: ['科技', '产品'],
+    },
+  ];
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI Rendering
+// ═══════════════════════════════════════════════════════════
+
+function renderUsers() {
+  const list = document.getElementById('usersList');
+  list.innerHTML = users.map((u, i) => {
+    const badges = [];
+    if (u.excludeSentiments.includes('negative')) badges.push('<span class="user-badge badge-orange">屏蔽负能量</span>');
+    if (u.excludeSentiments.includes('controversial')) badges.push('<span class="user-badge badge-purple">屏蔽争议</span>');
+    if (u.includeTopics.length) badges.push(`<span class="user-badge badge-blue">偏好: ${u.includeTopics.join(',')}</span>`);
+    if (u.tone === 'formal') badges.push('<span class="user-badge badge-green">正式语气</span>');
+
+    const timeLabels = { morning: '早晨', afternoon: '下午', evening: '傍晚', night: '深夜' };
+
+    return `
+      <div class="user-item" data-index="${i}">
+        <div class="user-name">${u.avatar} ${u.name}</div>
+        <div class="user-pref">${u.customPrompt.slice(0, 50)}...</div>
+        <div>${badges.join('')}</div>
+        <div class="time-selector">
+          ${['morning', 'afternoon', 'evening', 'night'].map(t =>
+            `<button class="time-btn ${u.time === t ? 'active' : ''}" onclick="setUserTime(${i}, '${t}')">${timeLabels[t]}</button>`
+          ).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setUserTime(index, time) {
+  users[index].time = time;
+  renderUsers();
+}
+
+function setAdaptLevel(level) {
+  adaptLevel = level;
+  document.querySelectorAll('.adapt-levels button').forEach(b => {
+    b.classList.toggle('active', b.dataset.level === level);
+  });
+}
+
+function switchMode(m) {
+  mode = m;
+  document.getElementById('modeMock').classList.toggle('active', m === 'mock');
+  document.getElementById('modeLive').classList.toggle('active', m === 'live');
+  document.getElementById('apiCard').style.display = m === 'live' ? '' : 'none';
+}
+
+function loadSample(key) {
+  document.getElementById('contentInput').value = SAMPLES[key];
+}
+
+function clearResults() {
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('resultsContent').style.display = 'none';
+  document.getElementById('resultsGrid').innerHTML = '';
+}
+
+function addUser() {
+  const id = 'user-' + Date.now();
+  users.push({
+    id, name: '新用户', avatar: '🧑', tone: 'neutral', detail: 'normal',
+    customPrompt: '无特殊偏好', time: 'afternoon',
+    excludeSentiments: [], includeTopics: [],
+  });
+  renderUsers();
+}
+
+async function testApi() {
+  apiKey = document.getElementById('apiKey').value;
+  if (!apiKey) return;
+  document.getElementById('apiStatus').innerHTML = '<span class="status-dot offline"></span> 连接中...';
+  try {
+    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: 'ping' }], max_tokens: 5 }),
+    });
+    if (res.ok) {
+      apiConnected = true;
+      document.getElementById('apiStatus').innerHTML = '<span class="status-dot online"></span> 已连接';
+    } else {
+      document.getElementById('apiStatus').innerHTML = `<span class="status-dot offline"></span> 错误 ${res.status}`;
+    }
+  } catch (e) {
+    document.getElementById('apiStatus').innerHTML = `<span class="status-dot offline"></span> 连接失败`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Rendering Engine
+// ═══════════════════════════════════════════════════════════
+
+async function renderAll() {
+  const content = document.getElementById('contentInput').value;
+  if (!content.trim()) return;
+
+  const btn = document.getElementById('renderBtn');
+  btn.disabled = true;
+  btn.textContent = '渲染中...';
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsContent').style.display = '';
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = `<div class="loading"><div class="spinner"></div>正在为 ${users.length} 个用户生成个性化版本...</div>`;
+
+  const rules = document.getElementById('platformRules').value;
+  const vibe = document.getElementById('communityVibe').value;
+  const showDiff = document.getElementById('showDiff').checked;
+
+  const results = [];
+  for (const user of users) {
+    try {
+      const result = mode === 'live' && apiConnected
+        ? await renderLive(content, user, rules, vibe, adaptLevel)
+        : await renderMock(content, user, rules, vibe, adaptLevel);
+      results.push({ user, result });
+    } catch (e) {
+      results.push({ user, result: { error: e.message, segments: [{ id: 'seg-1', original: content, adapted: content, changes: [], reason: '渲染失败: ' + e.message }] } });
+    }
+  }
+
+  displayResults(results, showDiff);
+
+  btn.disabled = false;
+  btn.textContent = '渲染全部用户';
+}
+
+async function renderLive(content, user, rules, vibe, level) {
+  const segments = splitContent(content);
+  const adapted = [];
+
+  for (const seg of segments) {
+    const ctxPrompt = buildContextPrompt(user, level);
+    const messages = [
+      {
+        role: 'system',
+        content: `你是一个内容自适应引擎。根据用户上下文调整文本内容。
+
+${rules}
+
+${vibe}
+
+用户上下文：
+${ctxPrompt}
+
+改写原则（适应级别: ${level}）：
+- off: 原样返回
+- light: 微调语气和措辞，不改内容结构
+- moderate: 调整语气、详略、侧重角度，移除违规内容
+- aggressive: 大幅重构，按用户偏好重新组织信息
+
+返回 JSON：
+{"content": "改写后内容", "changes": [{"field": "content", "before": "原文片段", "after": "改后片段", "reason": "原因"}], "adaptationReason": "说明"}
+
+重要：保留核心信息，不编造新事实。`
+      },
+      { role: 'user', content: `原文：${seg}` }
+    ];
+
+    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model: 'deepseek-chat', messages, temperature: 0.4, max_tokens: 4096 }),
+    });
+
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content ?? '';
+
+    let parsed;
+    try {
+      const m = raw.match(/\{[\s\S]*\}/);
+      parsed = m ? JSON.parse(m[0]) : { content: raw, changes: [], adaptationReason: '' };
+    } catch {
+      parsed = { content: raw, changes: [], adaptationReason: '' };
+    }
+
+    adapted.push({
+      id: `seg-${adapted.length + 1}`,
+      original: seg,
+      adapted: parsed.content || raw,
+      changes: parsed.changes || [],
+      reason: parsed.adaptationReason || '',
+    });
+  }
+
+  return { segments: adapted };
+}
+
+function renderMock(content, user, rules, vibe, level) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const segments = splitContent(content);
+      const adapted = segments.map((seg, i) => {
+        return mockAdapt(seg, user, level, i);
+      });
+      resolve({ segments: adapted });
+    }, 300 + Math.random() * 400);
+  });
+}
+
+function mockAdapt(text, user, level, index) {
+  let adapted = text;
+  const changes = [];
+  let reason = '';
+
+  if (level === 'off') {
+    return { id: `seg-${index+1}`, original: text, adapted: text, changes: [], reason: '适应关闭，原样返回' };
+  }
+
+  const isNegative = /垃圾|差|烂|白痴|别买|扔钱|气死|心情差|没有意义|割韭菜|吊打|炫耀|围墙花园/.test(text);
+  const isAttack = /白痴|垃圾|割韭菜|帮人数钱|吊打/.test(text);
+  const isEmotional = /心情差|极点|白费|没有意义|为什么生活/.test(text);
+
+  if (isAttack && level !== 'light') {
+    const original = adapted;
+    adapted = adapted
+      .replace(/简直是垃圾/g, '有很大改进空间')
+      .replace(/白痴/g, '不太了解情况的朋友')
+      .replace(/割韭菜还帮人数钱/g, '花费较高')
+      .replace(/吊打/g, '在某些方面有优势')
+      .replace(/别跟我扯什么/g, '关于')
+      .replace(/围墙花园/g, '封闭生态')
+      .replace(/别买/g, '建议谨慎考虑')
+      .replace(/扔钱/g, '不太划算');
+    if (original !== adapted) {
+      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '移除人身攻击和过激言辞' });
+      reason = '将攻击性语言改为中性表述';
+    }
+  }
+
+  if (user.excludeSentiments.includes('negative') && isNegative) {
+    const original = adapted;
+    if (level === 'moderate' || level === 'aggressive') {
+      adapted = adapted
+        .replace(/用了三天就坏了/g, '耐用性可能需要关注')
+        .replace(/客服还一脸不耐烦/g, '客服体验有提升空间')
+        .replace(/心情差到极点/g, '最近遇到了一些挑战')
+        .replace(/什么都不想做/g, '需要一些时间调整')
+        .replace(/所有的努力都白费了/g, '有时会感到付出与回报不成正比')
+        .replace(/生活总是这么难/g, '生活中总有起伏');
+      if (original !== adapted) {
+        changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '用户偏好：屏蔽负能量' });
+        reason += (reason ? '；' : '') + '软化负面表述，适应用户情绪状态';
+      }
+    }
+  }
+
+  if (isEmotional && user.excludeSentiments.includes('negative')) {
+    if (level === 'aggressive') {
+      const original = adapted;
+      adapted = '生活中难免有低谷期，这是很正常的感受。也许可以试着和信任的人聊聊，或者给自己放个假。如果持续感到低落，也可以考虑寻求专业支持。';
+      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '积极适应：将情绪宣泄转为温暖建议' });
+      reason += (reason ? '；' : '') + '积极适应，提供温暖替代';
+    }
+  }
+
+  if (user.detail === 'brief' && text.length > 100) {
+    const sentences = adapted.split(/[。！？]/).filter(s => s.trim());
+    if (sentences.length > 2) {
+      const original = adapted;
+      adapted = sentences.slice(0, 2).join('。') + '。';
+      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '用户偏好：简要模式，压缩为要点' });
+      reason += (reason ? '；' : '') + '压缩为要点';
+    }
+  }
+
+  if (user.tone === 'formal' && level !== 'light') {
+    const original = adapted;
+    adapted = adapted
+      .replace(/不行/g, '欠佳')
+      .replace(/还行/g, '尚可')
+      .replace(/挺好的/g, '较为出色')
+      .replace(/说实话/g, '客观而言')
+      .replace(/大家/g, '各位用户');
+    if (original !== adapted) {
+      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '用户偏好：正式语气' });
+      reason += (reason ? '；' : '') + '调整为正式语气';
+    }
+  }
+
+  if (user.time === 'night' && level !== 'light') {
+    if (adapted.length > 150 && user.detail !== 'detailed') {
+      const original = adapted;
+      const sentences = adapted.split(/[。！？]/).filter(s => s.trim());
+      adapted = sentences.slice(0, 2).join('。') + '。';
+      if (original !== adapted) {
+        changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '夜间浏览：简化内容' });
+        reason += (reason ? '；' : '') + '夜间简化';
+      }
+    }
+  }
+
+  if (user.detail === 'detailed' && level === 'aggressive' && !isAttack) {
+    const original = adapted;
+    adapted = adapted + '\n\n[补充分析] 从产品角度看，用户反馈涉及质量管控和售后服务两个核心环节。外观设计获得正面反馈，说明工业设计方向正确，但品控和客服流程需要优化。建议关注：1) 退换货流程 2) 客服培训 3) 质量检测标准。';
+    changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '产品经理视角：补充专业分析' });
+    reason += (reason ? '；' : '') + '补充专业分析';
+  }
+
+  if (changes.length === 0) {
+    reason = '内容无需调整，保留原文';
+  }
+
+  return {
+    id: `seg-${index + 1}`,
+    original: text,
+    adapted,
+    changes,
+    reason,
+  };
+}
+
+function splitContent(text) {
+  if (text.length < 200) return [text];
+  const sentences = text.split(/(?<=[。！？])/);
+  const segments = [];
+  let current = '';
+  for (const s of sentences) {
+    current += s;
+    if (current.length >= 150) {
+      segments.push(current);
+      current = '';
+    }
+  }
+  if (current) segments.push(current);
+  return segments;
+}
+
+function buildContextPrompt(user, level) {
+  const lines = [
+    `用户: ${user.name}`,
+    `偏好语气: ${user.tone}`,
+    `偏好详略: ${user.detail}`,
+    `时间: ${user.time}`,
+  ];
+  if (user.includeTopics.length) lines.push(`偏好主题: ${user.includeTopics.join(', ')}`);
+  if (user.excludeSentiments.length) lines.push(`排除情感: ${user.excludeSentiments.join(', ')}`);
+  if (user.customPrompt) lines.push(`自定义偏好: ${user.customPrompt}`);
+  if (user.time === 'night') lines.push('注意: 用户在夜间浏览，偏好轻松简短的内容');
+  if (user.time === 'morning') lines.push('注意: 用户在早晨浏览，偏好信息密度高的内容');
+  return lines.join('\n');
+}
+
+function displayResults(results, showDiff) {
+  const grid = document.getElementById('resultsGrid');
+  const timeLabels = { morning: '早晨', afternoon: '下午', evening: '傍晚', night: '深夜' };
+
+  document.getElementById('userCountLabel').textContent = results.length;
+  document.getElementById('versionLabel').textContent = results.length;
+
+  grid.innerHTML = results.map(({ user, result }) => {
+    versionCounter++;
+    const versionId = `v-${Date.now()}-${versionCounter}`;
+    const segs = result.segments || [];
+    const adaptedCount = segs.filter(s => s.changes.length > 0).length;
+    const changesCount = segs.reduce((sum, s) => sum + s.changes.length, 0);
+
+    const segBlocks = segs.map(seg => {
+      const hasChanges = seg.changes.length > 0;
+      const changed = seg.original !== seg.adapted;
+      const cls = changed ? 'changed' : '';
+
+      return `
+        <div class="segment-block ${cls}">
+          <div class="segment-id">${seg.id} ${changed ? '· 已改写' : '· 原样保留'}</div>
+          <div class="segment-text">${escapeHtml(seg.adapted)}</div>
+          ${showDiff && hasChanges ? `
+            <div class="segment-changes">
+              ${seg.changes.map(c => `
+                <div class="change-item">
+                  <span class="before">${escapeHtml(c.before)}</span>
+                  →
+                  <span class="after">${escapeHtml(c.after)}</span>
+                  (${escapeHtml(c.reason)})
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${seg.reason ? `<div class="change-item" style="margin-top:4px;">原因: ${escapeHtml(seg.reason)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="result-card">
+        <div class="result-header">
+          <span class="user-tag">${user.avatar} ${user.name}</span>
+          <span class="time-tag">${timeLabels[user.time]} · ${adaptLevel}</span>
+        </div>
+        <div class="result-body">
+          ${segBlocks}
+        </div>
+        <div class="result-footer">
+          <span>版本 ${versionId.slice(-8)}</span>
+          <span>改写 ${adaptedCount}/${segs.length} 段 · ${changesCount} 处变更</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════
+
+renderUsers();
+</script>
+
+</body>
+</html>
