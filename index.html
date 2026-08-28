@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Adaptive Engine</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0c14;--bg2:#10131e;--panel:#161a26;--panel2:#1d2230;--panel3:#252b3d;
+  --border:#2a3045;--border2:#383f58;--text:#e8eaf0;--dim:#7a8095;--dim2:#5a6075;
+  --accent:#7c8cf0;--accent2:#5a6cd6;--accent-glow:rgba(124,140,240,.15);
+  --green:#4ade80;--green-glow:rgba(74,222,128,.12);
+  --orange:#fbbf52;--orange-glow:rgba(251,191,82,.12);
+  --red:#f87171;--red-glow:rgba(248,113,113,.12);
+  --purple:#c084fc;--purple-glow:rgba(192,132,252,.12);
+  --cyan:#38bdf8;--cyan-glow:rgba(56,189,248,.12);
+  --r:10px;--r-s:6px;--r-l:16px;
+  --shadow:0 4px 24px rgba(0,0,0,.3);
+  --transition:cubic-bezier(.4,0,.2,1);
+}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 0%,rgba(124,140,240,.06),transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(192,132,252,.04),transparent 50%);pointer-events:none;z-index:0}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+
+/* ─── Header ─── */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(10,12,20,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:16px}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));box-shadow:0 0 12px var(--accent-glow);animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.85)}}
+.hdr h1{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.hdr h1 span{color:var(--dim);font-weight:400;font-size:12px;margin-left:4px}
+.hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* API bar */
+.api-bar{display:flex;gap:4px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-s);padding:3px;transition:border-color .3s var(--transition)}
+.api-bar:focus-within{border-color:var(--accent)}
+.api-bar select{background:transparent;border:none;color:var(--text);font-size:12px;outline:none;cursor:pointer;padding:2px 4px}
+.api-bar select option{background:var(--panel)}
+.api-bar input{background:transparent;border:none;color:var(--text);font-size:12px;outline:none;width:130px;padding:2px 6px}
+.api-bar input::placeholder{color:var(--dim2)}
+.api-connect{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:5px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:600;transition:all .3s var(--transition)}
+.api-connect:hover{box-shadow:0 0 12px var(--accent-glow);transform:translateY(-1px)}
+.api-connect:active{transform:translateY(0)}
+.api-dot{width:8px;height:8px;border-radius:50%;margin:0 2px;transition:all .3s}
+.api-dot.on{background:var(--green);box-shadow:0 0 8px var(--green-glow)}
+.api-dot.off{background:var(--dim2)}
+
+/* ─── Tabs ─── */
+.tabs{display:flex;gap:2px;padding:0 24px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:45px;z-index:90}
+.tab{padding:10px 18px;cursor:pointer;font-size:13px;color:var(--dim);border-bottom:2px solid transparent;white-space:nowrap;transition:all .3s var(--transition);position:relative}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab .num{font-size:10px;background:var(--panel3);padding:1px 5px;border-radius:4px;margin-left:4px;transition:all .3s}
+.tab.active .num{background:var(--accent-glow);color:var(--accent)}
+
+/* ─── Main ─── */
+.main{padding:20px 24px;max-width:1600px;margin:0 auto;position:relative;z-index:1}
+.tab-content{display:none;animation:fadeIn .4s var(--transition)}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── Cards ─── */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;transition:border-color .3s var(--transition);overflow:hidden}
+.card:hover{border-color:var(--border2)}
+.card-hdr{padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.card-hdr .ico{font-size:14px;width:20px;text-align:center}
+.card-bdy{padding:14px}
+
+/* ─── Fields ─── */
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:11px;color:var(--dim);margin-bottom:4px;letter-spacing:.3px}
+.field textarea,.field input,.field select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-s);color:var(--text);padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical;transition:all .3s var(--transition)}
+.field textarea{min-height:50px;line-height:1.5}
+.field textarea:focus,.field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.field select option{background:var(--panel)}
+
+/* ─── Buttons ─── */
+.btn{padding:8px 20px;border:none;border-radius:var(--r-s);cursor:pointer;font-size:13px;font-weight:600;transition:all .3s var(--transition);position:relative;overflow:hidden}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-p:hover{box-shadow:0 4px 16px var(--accent-glow);transform:translateY(-1px)}
+.btn-p:active{transform:translateY(0)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-p::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,.3);transform:translate(-50%,-50%);transition:width .6s,height .6s}
+.btn-p:active::after{width:300px;height:300px}
+.btn-s{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-weight:400}
+.btn-s:hover{border-color:var(--accent);color:var(--accent)}
+.btn-s.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-sm{font-size:11px;padding:4px 10px}
+
+/* ─── Grid ─── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-side{display:grid;grid-template-columns:280px 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+/* ─── Mobile Responsive ─── */
+@media(max-width:768px){
+  .hdr{padding:8px 12px;gap:8px;flex-wrap:wrap}
+  .hdr-logo{flex:1}
+  .hdr h1{font-size:13px}
+  .hdr h1 span{display:none}
+  .hdr-right{width:100%}
+  .api-bar{width:100%;flex:1}
+  .api-bar input{width:100%;flex:1}
+  .tabs{padding:0 8px;top:41px;-webkit-overflow-scrolling:touch}
+  .tab{padding:8px 12px;font-size:12px}
+  .tab .num{display:none}
+  .main{padding:12px}
+  .grid-2,.grid-side,.grid-3{grid-template-columns:1fr}
+  .card-hdr{padding:8px 12px;font-size:12px}
+  .card-bdy{padding:10px}
+  .field textarea,.field input,.field select{font-size:13px;padding:10px 12px}
+  .field textarea{min-height:60px}
+  .btn{padding:10px 16px;font-size:13px}
+  .seg{padding:8px 10px}
+  .seg-txt{font-size:12px}
+  .rc-hdr{padding:6px 10px}
+  .rc-name{font-size:12px}
+  .rc-meta{font-size:10px}
+  .rc-bdy{padding:8px 10px}
+  .levels button{padding:8px 4px;font-size:10px}
+  .times button{padding:5px 2px;font-size:9px}
+  .banner{padding:8px 12px;font-size:11px}
+  .pipe-num{width:24px;height:24px;font-size:11px}
+  .pipe-title{font-size:12px}
+  .timeline{padding-left:24px}
+  .tl-item::before{left:-20px}
+  .suggest-box{padding:10px}
+  .violation{padding:6px 8px}
+  .ver-entry{padding:6px 8px}
+  .empty{padding:30px 12px}
+  .empty .ico{font-size:28px}
+  .loading{padding:20px}
+  .toast{bottom:16px;right:12px;left:12px;text-align:center}
+}
+@media(max-width:380px){
+  .hdr h1{font-size:12px}
+  .tab{padding:6px 8px;font-size:11px}
+  .levels button{font-size:9px}
+  .api-bar select{font-size:11px}
+  .api-connect{padding:4px 8px;font-size:10px}
+}
+
+/* ─── Segments ─── */
+.seg{background:var(--bg2);border-radius:var(--r-s);padding:10px 12px;margin-bottom:8px;border-left:3px solid transparent;transition:all .3s var(--transition);animation:slideIn .4s var(--transition)}
+.seg:last-child{margin-bottom:0}
+.seg:hover{background:var(--panel3)}
+.seg.changed{border-left-color:var(--orange)}
+.seg.violation{border-left-color:var(--red);background:var(--red-glow)}
+.seg.ok{border-left-color:var(--green)}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.seg-id{font-size:10px;color:var(--dim);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.seg-txt{font-size:13px;white-space:pre-wrap;word-break:break-word}
+.seg-diff{margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.diff-line{font-size:11px;color:var(--dim);margin-top:4px;animation:fadeIn .3s var(--transition)}
+.diff-line .del{color:var(--red);text-decoration:line-through}
+.diff-line .add{color:var(--green)}
+
+/* ─── Result Cards ─── */
+.rc{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .3s var(--transition);animation:cardIn .5s var(--transition)}
+.rc:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.rc-hdr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--panel2)}
+.rc-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px}
+.rc-meta{font-size:11px;color:var(--dim)}
+.rc-bdy{padding:10px 12px}
+.rc-ftr{padding:6px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--dim);display:flex;justify-content:space-between;background:var(--panel2)}
+
+/* ─── Badges ─── */
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;margin-right:3px;font-weight:500;animation:badgeIn .3s var(--transition)}
+@keyframes badgeIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.b-green{background:var(--green-glow);color:var(--green)}
+.b-orange{background:var(--orange-glow);color:var(--orange)}
+.b-purple{background:var(--purple-glow);color:var(--purple)}
+.b-blue{background:var(--accent-glow);color:var(--accent)}
+.b-red{background:var(--red-glow);color:var(--red)}
+.b-cyan{background:var(--cyan-glow);color:var(--cyan)}
+
+/* ─── Levels ─── */
+.levels{display:flex;gap:4px}
+.levels button{flex:1;padding:6px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:var(--r-s);cursor:pointer;font-size:11px;transition:all .3s var(--transition)}
+.levels button:hover{color:var(--text);border-color:var(--border2)}
+.levels button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:var(--accent);box-shadow:0 2px 8px var(--accent-glow)}
+
+/* ─── Time buttons ─── */
+.times{display:flex;gap:3px;margin-top:4px}
+.times button{flex:1;padding:4px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:4px;cursor:pointer;font-size:10px;transition:all .3s var(--transition)}
+.times button:hover{color:var(--text)}
+.times button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ─── Loading ─── */
+.loading{display:flex;align-items:center;justify-content:center;padding:30px;color:var(--dim);font-size:13px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-right:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── Skeleton loading ─── */
+.skel{background:linear-gradient(90deg,var(--panel) 25%,var(--panel3) 50%,var(--panel) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r-s)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-line{height:14px;margin-bottom:6px;border-radius:4px}
+
+/* ─── Empty ─── */
+.empty{text-align:center;padding:50px 20px;color:var(--dim)}
+.empty .ico{font-size:36px;margin-bottom:10px;opacity:.5;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.empty .hint{font-size:12px;margin-top:4px;color:var(--dim2)}
+
+/* ─── User item ─── */
+.user-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-s);padding:8px 10px;margin-bottom:6px;transition:all .3s var(--transition)}
+.user-item:hover{border-color:var(--border2);transform:translateX(2px)}
+.user-item .uname{font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px}
+.user-item .upref{font-size:11px;color:var(--dim);margin-top:2px}
+
+/* ─── Timeline ─── */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:linear-gradient(to bottom,var(--accent),var(--purple),var(--cyan));border-radius:1px}
+.tl-item{position:relative;margin-bottom:16px;animation:tlIn .5s var(--transition)}
+.tl-item:last-child{margin-bottom:0}
+@keyframes tlIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+.tl-item::before{content:'';position:absolute;left:-22px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 8px var(--accent-glow)}
+.tl-time{font-size:12px;color:var(--accent);font-weight:600;margin-bottom:4px}
+.tl-content{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-s);padding:10px}
+
+/* ─── Suggestion box ─── */
+.suggest-box{background:var(--panel2);border:1px solid var(--border2);border-radius:var(--r-s);padding:12px;margin-top:10px;position:relative;animation:cardIn .4s var(--transition)}
+.suggest-box::before{content:'AI 建议';position:absolute;top:-8px;left:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+.suggest-text{font-size:13px;margin-top:4px}
+.suggest-actions{margin-top:8px;display:flex;gap:6px}
+
+/* ─── Violation ─── */
+.violation{background:var(--red-glow);border:1px solid rgba(248,113,113,.3);border-radius:var(--r-s);padding:8px 10px;margin-bottom:6px;animation:slideIn .3s var(--transition)}
+.violation .v-type{font-size:12px;font-weight:600;color:var(--red)}
+.violation .v-detail{font-size:11px;color:var(--dim);margin-top:2px}
+
+/* ─── Pipeline ─── */
+.pipe-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;animation:pipeIn .4s var(--transition)}
+@keyframes pipeIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.pipe-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .3s var(--transition);background:var(--panel3);color:var(--dim);border:2px solid var(--border)}
+.pipe-num.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+.pipe-num.done{background:var(--green);color:#0a0c14;border-color:var(--green);box-shadow:0 0 8px var(--green-glow)}
+.pipe-num.fail{background:var(--red);color:#fff;border-color:var(--red)}
+.pipe-content{flex:1}
+.pipe-title{font-size:13px;font-weight:600;margin-bottom:4px}
+
+/* ─── Version history ─── */
+.ver-entry{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-s);padding:8px 10px;margin-bottom:6px;cursor:pointer;transition:all .3s var(--transition)}
+.ver-entry:hover{border-color:var(--accent);background:var(--panel3);transform:translateX(3px)}
+.ver-entry.active{border-color:var(--accent);background:var(--accent-glow)}
+.ver-entry .v-id{font-size:11px;color:var(--dim)}
+.ver-entry .v-summary{font-size:12px;margin-top:2px}
+
+/* ─── Banner ─── */
+.banner{background:linear-gradient(135deg,var(--accent-glow),var(--purple-glow));border:1px solid var(--border2);border-radius:var(--r);padding:12px 16px;font-size:12px;color:var(--dim);margin-bottom:14px;display:flex;align-items:center;gap:8px;animation:fadeIn .4s var(--transition)}
+.banner strong{color:var(--text);font-weight:600}
+.banner .b-ico{font-size:16px}
+
+/* ─── Toast ─── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--panel3);border:1px solid var(--border2);border-radius:var(--r-s);padding:10px 16px;font-size:12px;color:var(--text);box-shadow:var(--shadow);z-index:200;transform:translateY(100px);opacity:0;transition:all .4s var(--transition)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:var(--green)}
+.toast.error{border-color:var(--red)}
+
+/* ─── Typing indicator ─── */
+.typing{display:inline-flex;gap:3px;align-items:center}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:typing 1.4s infinite ease-in-out}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+
+</style>
+</head>
+<body>
+
+<!-- ─── Header ─── -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <div class="dot"></div>
+    <h1>Content Adaptive Engine <span>· 多模态内容动态自适应</span></h1>
+  </div>
+  <div class="hdr-right">
+    <div class="api-bar">
+      <span class="api-dot off" id="apiDot"></span>
+      <select id="apiProvider" onchange="onProviderChange()">
+        <option value="mock">Mock</option>
+        <option value="zhipu">智谱 GLM</option>
+        <option value="silicon">硅基流动</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="gemini">Gemini</option>
+      </select>
+      <input type="password" id="apiKey" placeholder="API Key" onkeydown="if(event.key==='Enter')connectApi()" />
+      <button class="api-connect" onclick="connectApi()">连接</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Tabs ─── -->
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="moderate" onclick="switchTab('moderate')">发帖审核台<span class="num">1</span></div>
+  <div class="tab" data-tab="multiuser" onclick="switchTab('multiuser')">多用户对比<span class="num">2</span></div>
+  <div class="tab" data-tab="timeline" onclick="switchTab('timeline')">时间轴<span class="num">3</span></div>
+  <div class="tab" data-tab="admin" onclick="switchTab('admin')">管理员面板<span class="num">4</span></div>
+  <div class="tab" data-tab="suggest" onclick="switchTab('suggest')">输入时建议<span class="num">5</span></div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">版本历史<span class="num">6</span></div>
+</div>
+
+<div class="main">
+
+<!-- ═══ Tab 1: 发帖审核台 ═══ -->
+<div class="tab-content active" id="tab-moderate">
+  <div class="banner"><span class="b-ico">⚙️</span><div><strong>发帖审核台</strong> · 完整流水线：内容审核 → 违规改写 → 改写复验 → 发布/拦截</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📝</span> 输入内容</div>
+        <div class="card-bdy">
+          <div class="field">
+            <textarea id="modInput" style="min-height:100px;">你这个白痴，写的什么垃圾代码，脑子是不是有问题？回家种地去吧！</textarea>
+          </div>
+          <div class="field">
+            <label>快速示例</label>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button class="btn btn-s btn-sm" onclick="loadModSample('attack')">人身攻击</button>
+              <button class="btn btn-s btn-sm" onclick="loadModSample('fake')">虚假信息</button>
+              <button class="btn btn-s btn-sm" onclick="loadModSample('normal')">正常内容</button>
+              <button class="btn btn-s btn-sm" onclick="loadModSample('mixed')">混合内容</button>
+            </div>
+          </div>
+          <button class="btn btn-p" id="modRunBtn" onclick="runModeration()" style="width:100%">运行审核流水线</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">🔍</span> 审核流水线</div>
+        <div class="card-bdy" id="modPipeline">
+          <div class="empty"><div class="ico">⚙️</div><div>点击"运行审核流水线"查看</div><div class="hint">审核 → 改写 → 复验 → 发布/拦截</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 2: 多用户对比 ═══ -->
+<div class="tab-content" id="tab-multiuser">
+  <div class="banner"><span class="b-ico">👥</span><div><strong>多用户对比</strong> · 同一条内容，不同用户看到不同版本</div></div>
+  <div class="grid-side">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📝</span> 内容输入</div>
+        <div class="card-bdy">
+          <div class="field"><textarea id="muInput" style="min-height:80px;">这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买，买了就是扔钱！不过说实话，它的外观确实还行，颜色搭配挺好看的，如果质量能跟上就完美了。</textarea></div>
+          <div class="field">
+            <label>适应级别</label>
+            <div class="levels" id="muLevels">
+              <button data-l="off">关闭</button><button data-l="light">轻度</button>
+              <button class="active" data-l="moderate">中度</button><button data-l="aggressive">积极</button>
+            </div>
+          </div>
+          <button class="btn btn-p" id="muRunBtn" onclick="runMultiUser()" style="width:100%">渲染全部用户</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">👥</span> 用户列表</div>
+        <div class="card-bdy" id="muUsers"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📊</span> 渲染结果对比</div>
+        <div class="card-bdy" id="muResults">
+          <div class="empty"><div class="ico">🎨</div><div>点击渲染查看对比</div><div class="hint">同一内容将为每个用户生成不同版本</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 3: 时间轴 ═══ -->
+<div class="tab-content" id="tab-timeline">
+  <div class="banner"><span class="b-ico">⏰</span><div><strong>时间轴</strong> · 同一用户，不同时间，看到同一内容的不同版本</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📝</span> 内容 & 用户</div>
+        <div class="card-bdy">
+          <div class="field"><label>内容</label><textarea id="tlInput" style="min-height:80px;">关于这个新政策，有人支持有人反对。支持的人认为这能促进市场竞争，反对的人担心小企业会被挤垮。我个人觉得两方都有道理。另外，从技术角度看，合规成本不低，中小企业可能需要额外投入20-30%的IT预算。说实话，昨天和朋友聊到这个差点吵起来，但我觉得现实就是这么复杂。</textarea></div>
+          <div class="field"><label>用户</label><select id="tlUser"><option value="0">小李 (普通用户)</option><option value="1">老张 (资深评论员)</option><option value="2">小美 (情绪敏感用户)</option></select></div>
+          <div class="field"><label>适应级别</label><div class="levels" id="tlLevels"><button data-l="off">关闭</button><button data-l="light">轻度</button><button class="active" data-l="moderate">中度</button><button data-l="aggressive">积极</button></div></div>
+          <button class="btn btn-p" id="tlRunBtn" onclick="runTimeline()" style="width:100%">生成时间轴</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">⏰</span> 时间轴结果</div>
+        <div class="card-bdy" id="tlResults">
+          <div class="empty"><div class="ico">⏰</div><div>点击生成时间轴</div><div class="hint">同一用户在早/午/晚/深夜看到不同版本</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 4: 管理员面板 ═══ -->
+<div class="tab-content" id="tab-admin">
+  <div class="banner"><span class="b-ico">⚙️</span><div><strong>管理员面板</strong> · 调整规则/氛围/级别，实时影响渲染效果</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">⚙️</span> 平台配置</div>
+        <div class="card-bdy">
+          <div class="field"><label>平台规则提示词</label><textarea id="adminRules" style="min-height:90px;">平台内容规则：
+1. 禁止人身攻击、侮辱、谩骂
+2. 禁止虚假信息和恶意造谣
+3. 禁止泄露他人隐私
+4. 禁止煽动仇恨和歧视
+5. 鼓励理性、建设性的讨论</textarea></div>
+          <div class="field"><label>社区氛围提示词</label><textarea id="adminVibe" style="min-height:70px;">社区氛围设定：
+- 友善、包容、理性
+- 鼓励多元观点但反对恶意攻击
+- 对新手友好，乐于解答</textarea></div>
+          <div class="field"><label>适应级别</label><div class="levels" id="adminLevels"><button data-l="off">关闭</button><button data-l="light">轻度</button><button class="active" data-l="moderate">中度</button><button data-l="aggressive">积极</button></div></div>
+          <div class="field"><label>测试内容</label><textarea id="adminInput">你这个白痴，写的什么垃圾代码，脑子是不是有问题？回家种地去吧！</textarea></div>
+          <div class="field"><label>模拟用户</label><select id="adminUser"><option value="casual">普通用户</option><option value="formal">专业用户 (正式语气)</option><option value="sensitive">敏感用户 (屏蔽负能量)</option></select></div>
+          <button class="btn btn-p" id="adminRunBtn" onclick="runAdmin()" style="width:100%">应用配置并渲染</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">🎯</span> 渲染效果</div>
+        <div class="card-bdy" id="adminResults">
+          <div class="empty"><div class="ico">⚙️</div><div>修改左侧配置后点击渲染</div><div class="hint">改规则/氛围/级别 → 看效果变化</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 5: 输入时建议 ═══ -->
+<div class="tab-content" id="tab-suggest">
+  <div class="banner"><span class="b-ico">💡</span><div><strong>输入时建议</strong> · 打字时实时分析，弹出措辞建议，一键采纳</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">⌨️</span> 输入区域</div>
+        <div class="card-bdy">
+          <div class="field"><label>在此输入内容（停顿1秒后自动分析）</label><textarea id="suggestInput" style="min-height:120px;" placeholder="开始打字..."></textarea></div>
+          <div class="field"><label>社区规则</label><textarea id="suggestRules" style="min-height:50px;">禁止人身攻击、谩骂。鼓励友善、建设性的表达。</textarea></div>
+          <button class="btn btn-p" onclick="analyzeSuggestion()" style="width:100%">立即分析</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">💡</span> AI 建议</div>
+        <div class="card-bdy" id="suggestResults">
+          <div class="empty"><div class="ico">💡</div><div>开始打字，停顿后自动分析</div><div class="hint">或点击"立即分析"手动触发</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 6: 版本历史 ═══ -->
+<div class="tab-content" id="tab-history">
+  <div class="banner"><span class="b-ico">📜</span><div><strong>版本历史</strong> · 所有渲染版本自动记录，可追溯对比</div></div>
+  <div class="grid-side">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📜</span> 版本列表</div>
+        <div class="card-bdy" id="historyList">
+          <div class="empty"><div class="ico">📜</div><div>先在其他页面渲染内容</div><div class="hint">版本会自动记录在这里</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">🔍</span> 版本详情</div>
+        <div class="card-bdy" id="historyDetail">
+          <div class="empty"><div class="ico">📋</div><div>选择左侧版本查看详情</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  State
+// ═══════════════════════════════════════════════════════════
+let provider='mock',apiKey='',apiConnected=true,currentLevel='moderate';
+let versionHistory=[],versionCounter=0;
+
+const PROVIDERS={
+  zhipu:{base:'https://open.bigmodel.cn/api/paas/v4/chat/completions',model:'glm-4-flash'},
+  silicon:{base:'https://api.siliconflow.cn/v1/chat/completions',model:'Qwen/Qwen2.5-7B-Instruct'},
+  deepseek:{base:'https://api.deepseek.com/v1/chat/completions',model:'deepseek-chat'},
+  gemini:{base:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',model:'gemini-2.5-flash'},
+  mock:{base:'',model:'mock'},
+};
+
+const MOD_SAMPLES={
+  attack:'你这个白痴，写的什么垃圾代码，脑子是不是有问题？回家种地去吧！',
+  fake:'据内部消息，某公司马上要倒闭了，大家快抛售股票，我已经全清了。内幕！',
+  normal:'今天试了新的红烧肉做法，用了冰糖炒糖色，味道比之前好太多了，分享给大家。',
+  mixed:'这手机续航太差了简直是垃圾！不过屏幕确实不错。另外听说某品牌要退出中国市场了，大家怎么看？',
+};
+
+const DEFAULT_USERS=[
+  {id:'a',name:'小明',avatar:'👤',tone:'casual',detail:'normal',customPrompt:'我是普通消费者，想看真实的产品评价',time:'morning',excludeSentiments:[],includeTopics:[]},
+  {id:'b',name:'小红',avatar:'👩',tone:'casual',detail:'brief',customPrompt:'今天心情不好，不想看到负能量和负面评价',time:'night',excludeSentiments:['negative','controversial'],includeTopics:[]},
+  {id:'c',name:'产品经理老王',avatar:'👨‍💼',tone:'formal',detail:'detailed',customPrompt:'我是产品经理，需要客观详细的产品反馈信息',time:'morning',excludeSentiments:[],includeTopics:['科技','产品']},
+];
+let muUsers=JSON.parse(JSON.stringify(DEFAULT_USERS));
+
+// ═══════════════════════════════════════════════════════════
+//  API Layer (FIXED: strip markdown, better prompts)
+// ═══════════════════════════════════════════════════════════
+
+function stripMarkdown(text){
+  // Remove ```json ... ``` or ``` ... ``` wrappers
+  return text.replace(/^```(?:json)?\s*\n?/i,'').replace(/\n?```\s*$/,'').trim();
+}
+
+async function callLLM(messages,opts={}){
+  if(provider==='mock'||!apiConnected) return mockLLM(messages,opts);
+  const p=PROVIDERS[provider];
+  const res=await fetch(p.base,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+    body:JSON.stringify({model:opts.model||p.model,messages,temperature:opts.temperature??0.4,max_tokens:opts.maxTokens??4096}),
+  });
+  if(!res.ok) throw new Error(`API ${res.status}: ${(await res.text()).slice(0,100)}`);
+  const data=await res.json();
+  return data.choices?.[0]?.message?.content??'';
+}
+
+async function callLLMJSON(messages,opts={}){
+  let raw=await callLLM(messages,opts);
+  raw=stripMarkdown(raw); // FIX: strip markdown code blocks
+  const m=raw.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('No JSON in response: '+raw.slice(0,100));
+  return JSON.parse(m[0]);
+}
+
+function mockLLM(messages,opts){
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      const sys=messages.find(m=>m.role==='system')?.content||'';
+      const usr=messages.find(m=>m.role==='user')?.content||'';
+      if(sys.includes('审核')){const atk=/白痴|垃圾|脑子|种地|扔钱/.test(usr),fake=/内部消息|倒闭|抛售|内幕/.test(usr);const v=[];if(atk)v.push({type:'人身攻击',severity:'high',snippet:atk?'白痴/垃圾/脑子有问题':'',reason:'使用侮辱性语言'});if(fake)v.push({type:'虚假信息',severity:'high',snippet:'内部消息/倒闭',reason:'未经证实的信息'});resolve(JSON.stringify({passed:!v.length,violations:v,summary:v.length?`检测到${v.length}处违规`:'内容合规'}));return}
+      if(sys.includes('改写')){let r=usr.replace(/简直是垃圾/g,'有很大改进空间').replace(/白痴/g,'不太了解情况的朋友').replace(/脑子是不是有问题/g,'可能需要再学习一下').replace(/回家种地去吧/g,'建议转行').replace(/千万别买/g,'建议谨慎考虑').replace(/扔钱/g,'不太划算').replace(/据内部消息/g,'据传').replace(/马上要倒闭了/g,'经营状况可能存在不确定性').replace(/快抛售/g,'建议关注风险').replace(/内幕/g,'市场传闻');resolve(JSON.stringify({content:r,changes:[{field:'content',before:usr.slice(0,30),after:r.slice(0,30),reason:'移除攻击性/不实表述'}],adaptationReason:'已将攻击性语言改为中性表述'}));return}
+      if(sys.includes('复验')){resolve(JSON.stringify({passed:true,intentPreserved:true,intentAnalysis:'改写保留了原文核心观点'}));return}
+      if(sys.includes('自适应')||sys.includes('调整文本')){let r=usr;const ch=[];if(/屏蔽负能量|negative/.test(sys)){r=r.replace(/简直是垃圾/g,'有很大改进空间').replace(/千万别买/g,'建议谨慎考虑').replace(/扔钱/g,'不太划算').replace(/不耐烦/g,'有提升空间');ch.push({field:'content',before:'垃圾/千万别买',after:'改进空间/谨慎考虑',reason:'用户偏好：屏蔽负能量'})}if(/formal|正式/.test(sys)){r=r.replace(/还行/g,'尚可').replace(/挺好的/g,'较为出色').replace(/说实话/g,'客观而言');ch.push({field:'content',before:'还行/挺好的',after:'尚可/较为出色',reason:'正式语气'})}if(/brief|简要/.test(sys)&&r.length>100){const s=r.split(/[。！？]/).filter(x=>x.trim());r=s.slice(0,2).join('。')+'。';ch.push({field:'content',before:usr.slice(0,30),after:r.slice(0,30),reason:'简要模式'})}if(/night|夜间/.test(sys)&&r.length>120){const s=r.split(/[。！？]/).filter(x=>x.trim());r=s.slice(0,2).join('。')+'。';ch.push({field:'content',before:usr.slice(0,30),after:r.slice(0,30),reason:'夜间简化'})}if(/detailed|aggressive|产品经理/.test(sys)&&!ch.length){r+='\n\n[补充分析] 从产品角度看，用户反馈涉及质量管控和售后服务两个核心环节。外观设计获得正面反馈，说明工业设计方向正确，但品控和客服流程需要优化。';ch.push({field:'content',before:usr.slice(0,30),after:r.slice(0,30),reason:'补充专业分析'})}resolve(JSON.stringify({content:r,changes:ch,adaptationReason:ch.length?ch.map(c=>c.reason).join('；'):'内容无需调整'}));return}
+      if(sys.includes('建议')&&sys.includes('措辞')){const iss=[];if(/白痴|垃圾/.test(usr))iss.push({original:'白痴/垃圾',suggestion:'有很大改进空间',reason:'人身攻击'});if(/千万别买|扔钱/.test(usr))iss.push({original:'千万别买/扔钱',suggestion:'建议谨慎考虑',reason:'过激表述'});if(/据内部消息|倒闭/.test(usr))iss.push({original:'据内部消息',suggestion:'据传',reason:'未经证实的信息'});resolve(JSON.stringify({suggestions:iss,overallTone:iss.length?'内容包含攻击性/不实表述':'内容语气友善'}));return}
+      resolve(usr);
+    },300+Math.random()*300);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  API Connection
+// ═══════════════════════════════════════════════════════════
+
+function onProviderChange(){
+  provider=document.getElementById('apiProvider').value;
+  if(provider==='mock'){apiConnected=true;updateApiStatus();showToast('已切换到 Mock 模式','success')}
+  else{apiConnected=false;updateApiStatus()}
+}
+
+async function connectApi(){
+  apiKey=document.getElementById('apiKey').value;
+  if(!apiKey&&provider!=='mock'){showToast('请输入 API Key','error');return}
+  if(provider==='mock'){apiConnected=true;updateApiStatus();return}
+  document.getElementById('apiDot').className='api-dot off';
+  showToast('连接中...','');
+  try{
+    const p=PROVIDERS[provider];
+    const res=await fetch(p.base,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},body:JSON.stringify({model:p.model,messages:[{role:'user',content:'hi'}],max_tokens:5})});
+    apiConnected=res.ok;
+    if(apiConnected)showToast('API 连接成功','success');else showToast(`连接失败: ${res.status}`,'error');
+  }catch(e){apiConnected=false;showToast(`连接失败: ${e.message}`,'error')}
+  updateApiStatus();
+}
+
+function updateApiStatus(){document.getElementById('apiDot').className=apiConnected?'api-dot on':'api-dot off'}
+
+// ═══════════════════════════════════════════════════════════
+//  Toast
+// ═══════════════════════════════════════════════════════════
+
+let toastTimer=null;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.className='toast '+type,3000);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab Switching
+// ═══════════════════════════════════════════════════════════
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 1: 发帖审核台
+// ═══════════════════════════════════════════════════════════
+
+function loadModSample(key){document.getElementById('modInput').value=MOD_SAMPLES[key]}
+
+async function runModeration(){
+  const content=document.getElementById('modInput').value;
+  if(!content.trim())return;
+  const btn=document.getElementById('modRunBtn');
+  btn.disabled=true;btn.textContent='运行中...';
+  const pipe=document.getElementById('modPipeline');
+  const rules=document.getElementById('adminRules')?.value||'禁止人身攻击、虚假信息、谩骂';
+  const vibe=document.getElementById('adminVibe')?.value||'友善、理性';
+  
+  let html='<div class="pipe-step"><div class="pipe-num active">1</div><div class="pipe-content"><div class="pipe-title">内容审核</div><div class="loading"><div class="spinner"></div>审核中...</div></div></div>';
+  pipe.innerHTML=html;
+  
+  try{
+    // Step 1: 审核
+    const mod=await callLLMJSON([
+      {role:'system',content:`你是内容审核助手。根据规则审核内容。\n规则：\n${rules}\n\n返回JSON: {"passed":bool,"violations":[{"type":"","severity":"low/medium/high","snippet":"","reason":""}],"summary":""}\n只输出JSON，不要markdown代码块。`},
+      {role:'user',content:`审核以下内容：\n${content}`}
+    ],{temperature:0.1});
+    
+    const step1Done=mod.passed?'done':(mod.violations?.length?'fail':'done');
+    html=`<div class="pipe-step"><div class="pipe-num ${step1Done}">${mod.passed?'✓':'!'}</div><div class="pipe-content"><div class="pipe-title">内容审核</div>`;
+    html+=`<div>审核结果: ${mod.passed?'<span class="badge b-green">通过</span>':'<span class="badge b-red">未通过</span>'}</div>`;
+    html+=`<div style="font-size:12px;color:var(--dim);margin-top:4px">${esc(mod.summary||'')}</div>`;
+    if(mod.violations?.length){html+='<div style="margin-top:6px">';mod.violations.forEach(v=>{html+=`<div class="violation"><div class="v-type">${esc(v.type)} [${esc(v.severity)}]</div><div class="v-detail">片段: "${esc(v.snippet)}" — ${esc(v.reason)}</div></div>`});html+='</div>'}
+    html+='</div></div>';
+    
+    if(mod.passed){
+      html+=`<div class="pipe-step"><div class="pipe-num done">2</div><div class="pipe-content"><div class="pipe-title">内容合规，直接发布</div><div class="seg ok"><div class="seg-id">原文保留</div><div class="seg-txt">${esc(content)}</div></div></div></div>`;
+      pipe.innerHTML=html;
+      recordVersion('审核台',content,content,'合规通过',[]);
+      btn.disabled=false;btn.textContent='运行审核流水线';
+      return;
+    }
+    
+    // Step 2: 改写
+    html+='<div class="pipe-step"><div class="pipe-num active">2</div><div class="pipe-content"><div class="pipe-title">内容改写</div><div class="loading"><div class="spinner"></div>改写中...</div></div></div>';
+    pipe.innerHTML=html;
+    
+    const rewrite=await callLLMJSON([
+      {role:'system',content:`你是内容改写助手。将以下违规内容改写为合规版本。必须改写，不能原样返回。保留核心意图，移除违规部分。\n规则：\n${rules}\n氛围：\n${vibe}\n\n返回JSON: {"content":"改写后的内容","changes":[{"field":"","before":"原文片段","after":"改后片段","reason":"原因"}],"adaptationReason":"说明"}\n只输出JSON，不要markdown代码块。`},
+      {role:'user',content:`原文：${content}\n\n违规：${JSON.stringify(mod.violations)}\n\n请改写为合规版本。`}
+    ],{temperature:0.4});
+    
+    // FIX: if content is empty, fallback
+    if(!rewrite.content||!rewrite.content.trim())rewrite.content=content;
+    
+    html=html.replace(/<div class="pipe-step"><div class="pipe-num active">2<\/div>.*?<\/div><\/div>/s,
+      `<div class="pipe-step"><div class="pipe-num active">2</div><div class="pipe-content"><div class="pipe-title">内容改写</div><div class="seg changed"><div class="seg-id">改写版本</div><div class="seg-txt">${esc(rewrite.content)}</div>${rewrite.changes?.length?`<div class="seg-diff">${rewrite.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`).join('')}</div>`:''}${rewrite.adaptationReason?`<div class="diff-line">原因: ${esc(rewrite.adaptationReason)}</div>`:''}</div></div></div>`);
+    pipe.innerHTML=html;
+    
+    // Step 3: 复验
+    html+='<div class="pipe-step"><div class="pipe-num active">3</div><div class="pipe-content"><div class="pipe-title">改写复验</div><div class="loading"><div class="spinner"></div>复验中...</div></div></div>';
+    pipe.innerHTML=html;
+    
+    const verify=await callLLMJSON([
+      {role:'system',content:`你是审核助手。判断改写后的内容是否合规且保留了原文意图。\n返回JSON: {"passed":bool,"intentPreserved":bool,"intentAnalysis":""}\n只输出JSON，不要markdown代码块。`},
+      {role:'user',content:`原文：${content}\n\n改写后：${rewrite.content}\n\n规则：${rules}`}
+    ],{temperature:0.1});
+    
+    const finalOk=verify.passed&&verify.intentPreserved;
+    html=html.replace(/<div class="pipe-step"><div class="pipe-num active">3<\/div>.*?<\/div><\/div>/s,
+      `<div class="pipe-step"><div class="pipe-num ${verify.passed?'done':'fail'}">${verify.passed?'✓':'!'}</div><div class="pipe-content"><div class="pipe-title">改写复验</div><div>合规: ${verify.passed?'<span class="badge b-green">是</span>':'<span class="badge b-red">否</span>'} 意图保留: ${verify.intentPreserved?'<span class="badge b-green">是</span>':'<span class="badge b-red">否</span>'}</div><div style="font-size:12px;color:var(--dim);margin-top:4px">${esc(verify.intentAnalysis||'')}</div></div></div>`);
+    
+    html+=`<div class="pipe-step"><div class="pipe-num ${finalOk?'done':'fail'}">${finalOk?'✓':'✗'}</div><div class="pipe-content"><div class="pipe-title">${finalOk?'发布改写版本':'拦截发布'}</div><div style="font-size:12px;color:var(--dim)">${finalOk?'内容已通过审核并保留原始意图，可以发布':'改写版本未通过复验，建议人工审核'}</div></div></div>`;
+    pipe.innerHTML=html;
+    recordVersion('审核台',content,rewrite.content,finalOk?'改写后发布':'拦截',rewrite.changes||[]);
+    
+  }catch(e){
+    pipe.innerHTML+=`<div style="color:var(--red);margin-top:8px">错误: ${esc(e.message)}</div>`;
+  }
+  btn.disabled=false;btn.textContent='运行审核流水线';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 2: 多用户对比
+// ═══════════════════════════════════════════════════════════
+
+function renderMuUsers(){
+  const tl={morning:'早',afternoon:'午',evening:'晚',night:'夜'};
+  document.getElementById('muUsers').innerHTML=muUsers.map((u,i)=>{
+    const b=[];
+    if(u.excludeSentiments.includes('negative'))b.push('<span class="badge b-orange">屏蔽负能量</span>');
+    if(u.excludeSentiments.includes('controversial'))b.push('<span class="badge b-purple">屏蔽争议</span>');
+    if(u.tone==='formal')b.push('<span class="badge b-green">正式</span>');
+    if(u.detail==='brief')b.push('<span class="badge b-cyan">简要</span>');
+    if(u.detail==='detailed')b.push('<span class="badge b-blue">详细</span>');
+    return `<div class="user-item"><div class="uname">${u.avatar} ${u.name}</div><div class="upref">${esc(u.customPrompt.slice(0,40))}...</div><div style="margin-top:3px">${b.join('')}</div><div class="times">${['morning','afternoon','evening','night'].map(t=>`<button class="${u.time===t?'active':''}" onclick="setMuTime(${i},'${t}')">${tl[t]}</button>`).join('')}</div></div>`;
+  }).join('');
+}
+function setMuTime(i,t){muUsers[i].time=t;renderMuUsers()}
+
+function setupLevels(id,callback){
+  document.getElementById(id)?.addEventListener('click',e=>{
+    if(e.target.dataset.l){currentLevel=e.target.dataset.l;callback()}
+  });
+}
+
+async function runMultiUser(){
+  const content=document.getElementById('muInput').value;
+  if(!content.trim())return;
+  const btn=document.getElementById('muRunBtn');btn.disabled=true;btn.textContent='渲染中...';
+  const rules=document.getElementById('adminRules')?.value||'';const vibe=document.getElementById('adminVibe')?.value||'';
+  const grid=document.getElementById('muResults');
+  grid.innerHTML=`<div class="loading"><div class="spinner"></div>为 ${muUsers.length} 个用户渲染中...</div>`;
+  
+  const results=[];
+  for(const user of muUsers){
+    try{results.push({user,result:await adaptForUser(content,user,rules,vibe,currentLevel)})}
+    catch(e){results.push({user,result:{content,error:e.message,changes:[],reason:'Error: '+e.message}})}
+  }
+  
+  const tl={morning:'早晨',afternoon:'下午',evening:'傍晚',night:'深夜'};
+  grid.innerHTML='<div class="grid-3">'+results.map(({user,result})=>{
+    const changed=result.content!==content&&!result.error;
+    return `<div class="rc"><div class="rc-hdr"><span class="rc-name">${user.avatar} ${user.name}</span><span class="rc-meta">${tl[user.time]} · ${currentLevel}</span></div><div class="rc-bdy"><div class="seg ${changed?'changed':'ok'}"><div class="seg-id">${result.error?'错误':(changed?'已改写':'原样保留')}</div><div class="seg-txt">${esc(result.content||result.error)}</div>${result.changes?.length?`<div class="seg-diff">${result.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`).join('')}</div>`:''}${result.reason?`<div class="diff-line">原因: ${esc(result.reason)}</div>`:''}</div></div><div class="rc-ftr"><span>v${Date.now().toString(36).slice(-6)}</span><span>${result.changes?.length||0} 处变更</span></div></div>`;
+  }).join('')+'</div>';
+  
+  results.forEach(({user,result})=>recordVersion('多用户',content,result.content,`${user.name}·${tl[user.time]}`,result.changes||[]));
+  btn.disabled=false;btn.textContent='渲染全部用户';
+}
+
+async function adaptForUser(content,user,rules,vibe,level){
+  const ctx=`用户: ${user.name}\n偏好语气: ${user.tone}\n偏好详略: ${user.detail}\n时间: ${user.time}\n${user.excludeSentiments.length?'排除情感: '+user.excludeSentiments.join(',')+'\n':''}${user.customPrompt?'自定义: '+user.customPrompt+'\n':''}${user.time==='night'?'注意: 夜间浏览，偏好轻松简短\n':''}${user.time==='morning'?'注意: 早晨，偏好信息密度高\n':''}`;
+  const result=await callLLMJSON([
+    {role:'system',content:`你是一个内容自适应引擎。根据用户上下文调整文本内容。必须返回改写后的完整内容，不能为空。\n${rules}\n${vibe}\n\n用户上下文：\n${ctx}\n适应级别: ${level}\noff=原样返回, light=微调语气, moderate=调整语气/详略/侧重, aggressive=大幅重构\n\n返回JSON: {"content":"改写后的完整内容","changes":[{"field":"","before":"","after":"","reason":""}],"adaptationReason":""}\n只输出JSON，不要markdown代码块。`},
+    {role:'user',content:`原文：${content}`}
+  ],{temperature:0.4});
+  if(!result.content||!result.content.trim())result.content=content;
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 3: 时间轴
+// ═══════════════════════════════════════════════════════════
+
+const TL_USERS=[
+  {name:'小李',tone:'casual',detail:'normal',customPrompt:'普通用户，无特殊偏好',excludeSentiments:[]},
+  {name:'老张',tone:'formal',detail:'detailed',customPrompt:'资深评论员，需要深度分析',excludeSentiments:[]},
+  {name:'小美',tone:'casual',detail:'brief',customPrompt:'情绪敏感，不想看争议和负能量',excludeSentiments:['negative','controversial']},
+];
+
+async function runTimeline(){
+  const content=document.getElementById('tlInput').value;
+  if(!content.trim())return;
+  const btn=document.getElementById('tlRunBtn');btn.disabled=true;btn.textContent='生成中...';
+  const userIdx=parseInt(document.getElementById('tlUser').value);
+  const user=TL_USERS[userIdx];
+  const rules=document.getElementById('adminRules')?.value||'';const vibe=document.getElementById('adminVibe')?.value||'';
+  const times=[
+    {label:'早晨 7:30',time:'morning',note:'精力充沛，想看深度分析'},
+    {label:'午休 12:30',time:'afternoon',note:'快速浏览，轻松模式'},
+    {label:'傍晚 18:30',time:'evening',note:'下班放松，中等详细'},
+    {label:'深夜 23:00',time:'night',note:'不想看争议，平静模式'},
+  ];
+  const results=document.getElementById('tlResults');
+  results.innerHTML='<div class="loading"><div class="spinner"></div>生成时间轴中...</div>';
+  let html='<div class="timeline">';
+  for(let i=0;i<times.length;i++){
+    const t=times[i];
+    const u={...user,time:t.time,customPrompt:user.customPrompt+'；'+t.note};
+    const result=await adaptForUser(content,u,rules,vibe,currentLevel);
+    const changed=result.content!==content;
+    html+=`<div class="tl-item"><div class="tl-time">${t.label} · ${t.note}</div><div class="tl-content"><div class="seg ${changed?'changed':'ok'}"><div class="seg-id">${changed?'已调整':'原样保留'} · ${result.changes?.length||0} 处变更</div><div class="seg-txt">${esc(result.content)}</div>${result.changes?.length?`<div class="seg-diff">${result.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span></div>`).join('')}</div>`:''}${result.reason?`<div class="diff-line">原因: ${esc(result.reason)}</div>`:''}</div></div></div>`;
+    recordVersion('时间轴',content,result.content,`${user.name}·${t.label}`,result.changes||[]);
+  }
+  html+='</div>';results.innerHTML=html;btn.disabled=false;btn.textContent='生成时间轴';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 4: 管理员面板
+// ═══════════════════════════════════════════════════════════
+
+async function runAdmin(){
+  const content=document.getElementById('adminInput').value;
+  if(!content.trim())return;
+  const btn=document.getElementById('adminRunBtn');btn.disabled=true;btn.textContent='渲染中...';
+  const rules=document.getElementById('adminRules').value;const vibe=document.getElementById('adminVibe').value;
+  const userType=document.getElementById('adminUser').value;
+  const userMap={
+    casual:{name:'普通用户',tone:'casual',detail:'normal',customPrompt:'普通浏览',time:'morning',excludeSentiments:[]},
+    formal:{name:'专业用户',tone:'formal',detail:'detailed',customPrompt:'需要专业详细的信息',time:'morning',excludeSentiments:[]},
+    sensitive:{name:'敏感用户',tone:'casual',detail:'brief',customPrompt:'不想看负能量',time:'night',excludeSentiments:['negative']},
+  };
+  const user=userMap[userType];
+  const results=document.getElementById('adminResults');
+  results.innerHTML='<div class="loading"><div class="spinner"></div>渲染中...</div>';
+  let html=`<div class="seg violation"><div class="seg-id">原文</div><div class="seg-txt">${esc(content)}</div></div><div style="text-align:center;font-size:12px;color:var(--dim);margin:8px 0">↓ 应用规则 + 氛围 + 适应级别 ↓</div>`;
+  try{
+    const result=await adaptForUser(content,user,rules,vibe,currentLevel);
+    const changed=result.content!==content;
+    html+=`<div class="seg ${changed?'changed':'ok'}"><div class="seg-id">${user.name} · ${currentLevel} · ${changed?'已改写':'原样保留'}</div><div class="seg-txt">${esc(result.content)}</div>${result.changes?.length?`<div class="seg-diff">${result.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`).join('')}</div>`:''}${result.reason?`<div class="diff-line">原因: ${esc(result.reason)}</div>`:''}</div>`;
+    html+=`<div style="margin-top:10px;font-size:11px;color:var(--dim)">规则: ${esc(rules.slice(0,50))}... | 氛围: ${esc(vibe.slice(0,30))}... | 级别: ${currentLevel} | 用户: ${user.name}</div>`;
+    recordVersion('管理员',content,result.content,`${user.name}·${currentLevel}`,result.changes||[]);
+  }catch(e){html+=`<div style="color:var(--red)">错误: ${esc(e.message)}</div>`}
+  results.innerHTML=html;btn.disabled=false;btn.textContent='应用配置并渲染';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 5: 输入时建议
+// ═══════════════════════════════════════════════════════════
+
+let suggestTimer=null;
+document.getElementById('suggestInput')?.addEventListener('input',()=>{
+  clearTimeout(suggestTimer);
+  suggestTimer=setTimeout(()=>{
+    const t=document.getElementById('suggestInput').value;
+    if(t.length>10)analyzeSuggestion();
+  },1000);
+});
+
+async function analyzeSuggestion(){
+  const text=document.getElementById('suggestInput').value;
+  if(!text.trim())return;
+  const rules=document.getElementById('suggestRules').value;
+  const results=document.getElementById('suggestResults');
+  results.innerHTML='<div class="loading"><div class="spinner"></div><div class="typing"><span></span><span></span><span></span></div></div>';
+  try{
+    const result=await callLLMJSON([
+      {role:'system',content:`你是写作建议助手。分析用户输入的文字，找出可能不友善、不合规或表达不清的措辞。\n规则：${rules}\n\n对于每处需要修改的措辞，给出original(原文中的具体措辞)、suggestion(建议改为什么)、reason(原因)。\n\n返回JSON: {"suggestions":[{"original":"原文措辞","suggestion":"建议改为","reason":"原因"}],"overallTone":"整体语气评价"}\n只输出JSON，不要markdown代码块。`},
+      {role:'user',content:text}
+    ],{temperature:0.3});
+    
+    if(!result.suggestions?.length||result.suggestions.every(s=>!s.original)){
+      results.innerHTML=`<div class="seg ok"><div class="seg-id">分析完成</div><div class="seg-txt">内容语气友善，无需调整</div><div class="diff-line">整体语气: ${esc(result.overallTone||'良好')}</div></div>`;
+      return;
+    }
+    let html=`<div style="margin-bottom:8px;font-size:12px;color:var(--dim)">整体语气: ${esc(result.overallTone||'')}</div>`;
+    result.suggestions.filter(s=>s.original).forEach((s,i)=>{
+      html+=`<div class="suggest-box"><div class="suggest-text">原文: <span style="color:var(--red)">${esc(s.original)}</span></div><div class="suggest-text" style="margin-top:4px">建议: <span style="color:var(--green)">${esc(s.suggestion)}</span></div><div class="diff-line">原因: ${esc(s.reason)}</div><div class="suggest-actions"><button class="btn btn-p btn-sm" onclick="acceptSuggestion(${i})">采纳</button><button class="btn btn-s btn-sm" onclick="dismissSuggestion(${i})">忽略</button></div></div>`;
+    });
+    window._lastSuggestions=result.suggestions.filter(s=>s.original);
+    results.innerHTML=html;
+  }catch(e){results.innerHTML=`<div style="color:var(--red)">错误: ${esc(e.message)}</div>`}
+}
+
+function acceptSuggestion(i){
+  const s=window._lastSuggestions?.[i];if(!s)return;
+  const ta=document.getElementById('suggestInput');
+  ta.value=ta.value.replace(s.original,s.suggestion);
+  showToast('已采纳建议','success');
+  analyzeSuggestion();
+}
+function dismissSuggestion(i){
+  const box=document.querySelectorAll('.suggest-box')[i];
+  if(box){box.style.opacity='.4';box.style.pointerEvents='none'}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 6: 版本历史
+// ═══════════════════════════════════════════════════════════
+
+function recordVersion(source,original,adapted,label,changes){
+  versionCounter++;
+  versionHistory.push({id:`v${versionCounter}`,timestamp:new Date().toLocaleTimeString('zh-CN',{hour12:false}),source,original,adapted,label,changes});
+  renderHistoryList();
+}
+function renderHistoryList(){
+  const list=document.getElementById('historyList');
+  if(!versionHistory.length)return;
+  list.innerHTML=versionHistory.slice().reverse().map(v=>
+    `<div class="ver-entry" onclick="showVersion('${v.id}',this)"><div class="v-id">${v.id} · ${v.timestamp}</div><div class="v-summary">${esc(v.label)} · ${v.changes.length}处变更</div></div>`
+  ).join('');
+}
+function showVersion(id,el){
+  document.querySelectorAll('.ver-entry').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const v=versionHistory.find(x=>x.id===id);if(!v)return;
+  document.getElementById('historyDetail').innerHTML=`
+    <div style="margin-bottom:10px"><span class="badge b-blue">${esc(v.source)}</span><span class="badge b-cyan">${esc(v.label)}</span><span style="font-size:11px;color:var(--dim);margin-left:6px">${v.timestamp}</span></div>
+    <div class="seg violation"><div class="seg-id">原始内容</div><div class="seg-txt">${esc(v.original)}</div></div>
+    <div style="text-align:center;font-size:11px;color:var(--dim);margin:6px 0">↓</div>
+    <div class="seg changed"><div class="seg-id">渲染版本 (${v.id})</div><div class="seg-txt">${esc(v.adapted)}</div>${v.changes.length?`<div class="seg-diff">${v.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`).join('')}</div>`:''}</div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px">变更数: ${v.changes.length}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Utils
+// ═══════════════════════════════════════════════════════════
+
+function esc(text){const d=document.createElement('div');d.textContent=text??'';return d.innerHTML}
+
+// ═══════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════
+
+provider='mock';apiConnected=true;
+document.getElementById('apiProvider').value='mock';
+updateApiStatus();renderMuUsers();
+setupLevels('muLevels',()=>document.querySelectorAll('#muLevels button').forEach(b=>b.classList.toggle('active',b.dataset.l===currentLevel)));
+setupLevels('tlLevels',()=>document.querySelectorAll('#tlLevels button').forEach(b=>b.classList.toggle('active',b.dataset.l===currentLevel)));
+setupLevels('adminLevels',()=>document.querySelectorAll('#adminLevels button').forEach(b=>b.classList.toggle('active',b.dataset.l===currentLevel)));
+</script>
+</body>
+</html>
