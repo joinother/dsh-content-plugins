@@ -756,6 +756,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
           <div id="authLoggedOut">
             <div class="field"><label>用户名</label><input type="text" id="regUsername" placeholder="输入用户名" style="width:100%"></div>
             <div class="field"><label>显示名</label><input type="text" id="regDisplay" placeholder="昵称（可选）" style="width:100%"></div>
+            <div class="field" id="inviteCodeField"><label>邀请码（注册需要）</label><input type="password" id="regInviteCode" placeholder="输入邀请码" style="width:100%"></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-p" onclick="userRegister()" style="flex:1">注册</button>
               <button class="btn btn-s" onclick="userLogin()" style="flex:1">登录</button>
@@ -1375,7 +1376,8 @@ function esc(text){const d=document.createElement('div');d.textContent=text??'';
 // ═══════════════════════════════════════════════════════════
 
 let currentUser=null;
-let userStore={}; // {username:{display,prefs,passkeyCredential}}
+let userStore={};
+const INVITE_CODE='761212'; // {username:{display,prefs,passkeyCredential}}
 
 function loadUserStore(){
   try{userStore=JSON.parse(localStorage.getItem('cae_users')||'{}')}catch{userStore={}}
@@ -1411,6 +1413,8 @@ function checkPasskeySupport(){
 async function passkeyRegister(){
   const username=document.getElementById('regUsername').value.trim();
   if(!username){showToast('请输入用户名','error');return}
+  const invite=document.getElementById('regInviteCode')?.value.trim()||'';
+  if(invite!==INVITE_CODE){showToast('邀请码错误，无法注册','error');return}
   if(!checkPasskeySupport())return;
 
   const displayName=document.getElementById('regDisplay').value.trim()||username;
@@ -1492,6 +1496,8 @@ function userRegister(){
   const username=document.getElementById('regUsername').value.trim();
   const display=document.getElementById('regDisplay').value.trim()||username;
   if(!username){showToast('请输入用户名','error');return}
+  const invite=document.getElementById('regInviteCode')?.value.trim()||'';
+  if(invite!==INVITE_CODE){showToast('邀请码错误，无法注册','error');return}
   if(userStore[username]){showToast('用户名已存在','error');return}
   userStore[username]={display,hasPasskey:false,prefs:defaultPrefs()};
   saveUserStore();
