@@ -3,971 +3,1129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Content Adaptive Engine - 多模态内容动态自适应演示</title>
+<title>Content Adaptive Engine - 完整功能演示</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --bg: #0f1117;
-    --panel: #1a1d27;
-    --panel-hover: #222631;
-    --border: #2a2e3a;
-    --text: #e0e0e0;
-    --text-dim: #888;
-    --accent: #6c7ee1;
-    --accent-dim: #4a5599;
-    --green: #5cb85c;
-    --orange: #f0ad4e;
-    --red: #d9534f;
-    --purple: #9b59b6;
-    --radius: 8px;
-  }
-  body {
-    font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0f1117; --panel:#1a1d27; --panel2:#222631; --border:#2a2e3a;
+  --text:#e0e0e0; --dim:#888; --accent:#6c7ee1; --accent-d:#4a5599;
+  --green:#5cb85c; --orange:#f0ad4e; --red:#d9534f; --purple:#9b59b6;
+  --cyan:#5bc0de; --r:8px;
+}
+body {
+  font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg); color:var(--text); font-size:14px; line-height:1.6;
+}
+a { color:var(--accent); text-decoration:none; }
 
-  /* ─── Header ─── */
-  .header {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .header h1 {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .header h1 span { color: var(--accent); }
-  .header-actions { display: flex; gap: 12px; align-items: center; }
-  .mode-toggle {
-    display: flex;
-    background: var(--bg);
-    border-radius: 6px;
-    padding: 2px;
-    border: 1px solid var(--border);
-  }
-  .mode-toggle button {
-    padding: 4px 12px;
-    border: none;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 12px;
-    transition: all 0.2s;
-  }
-  .mode-toggle button.active {
-    background: var(--accent);
-    color: white;
-  }
+/* Header */
+.hdr {
+  background:var(--panel); border-bottom:1px solid var(--border);
+  padding:10px 20px; display:flex; align-items:center; gap:16px;
+  position:sticky; top:0; z-index:100;
+}
+.hdr h1 { font-size:15px; font-weight:600; }
+.hdr h1 span { color:var(--accent); font-weight:400; }
+.hdr-right { margin-left:auto; display:flex; gap:10px; align-items:center; }
 
-  /* ─── Layout ─── */
-  .main {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 16px;
-    padding: 16px;
-    max-width: 1600px;
-    margin: 0 auto;
-  }
+/* API Provider */
+.api-bar {
+  display:flex; gap:6px; align-items:center;
+  background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:3px;
+}
+.api-bar select {
+  background:transparent; border:none; color:var(--text); font-size:12px; outline:none; cursor:pointer;
+}
+.api-bar input {
+  background:transparent; border:none; color:var(--text); font-size:12px; outline:none;
+  width:120px; padding:2px 4px;
+}
+.api-bar input::placeholder { color:var(--dim); }
+.api-bar button {
+  background:var(--accent); color:#fff; border:none; border-radius:4px;
+  padding:3px 10px; font-size:11px; cursor:pointer;
+}
+.api-bar .status { width:8px; height:8px; border-radius:50%; margin-right:2px; }
+.api-bar .status.on { background:var(--green); }
+.api-bar .status.off { background:var(--dim); }
 
-  /* ─── Sidebar (Admin Panel) ─── */
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .card-header {
-    padding: 10px 14px;
-    background: var(--panel-hover);
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .card-header .icon { font-size: 14px; }
-  .card-body { padding: 12px 14px; }
+/* Tabs */
+.tabs {
+  display:flex; gap:2px; padding:0 20px; background:var(--panel);
+  border-bottom:1px solid var(--border); overflow-x:auto;
+}
+.tab {
+  padding:8px 16px; cursor:pointer; font-size:13px; color:var(--dim);
+  border-bottom:2px solid transparent; white-space:nowrap; transition:all .2s;
+}
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-  .field { margin-bottom: 12px; }
-  .field:last-child { margin-bottom: 0; }
-  .field label {
-    display: block;
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 4px;
-  }
-  .field textarea, .field input, .field select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    padding: 8px 10px;
-    font-size: 12px;
-    font-family: inherit;
-    resize: vertical;
-  }
-  .field textarea { min-height: 60px; }
-  .field input:focus, .field textarea:focus, .field select:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
+/* Main */
+.main { padding:16px 20px; max-width:1600px; margin:0 auto; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
 
-  .adapt-levels { display: flex; gap: 4px; }
-  .adapt-levels button {
-    flex: 1;
-    padding: 6px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-dim);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
-    transition: all 0.2s;
-  }
-  .adapt-levels button.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-  }
+/* Cards */
+.card {
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--r); margin-bottom:14px;
+}
+.card-hdr {
+  padding:10px 14px; background:var(--panel2); border-bottom:1px solid var(--border);
+  font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px;
+}
+.card-bdy { padding:12px 14px; }
 
-  /* ─── Users Panel ─── */
-  .users-list { display: flex; flex-direction: column; gap: 8px; }
-  .user-item {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .user-item:hover { border-color: var(--accent-dim); }
-  .user-item.active { border-color: var(--accent); background: rgba(108, 126, 225, 0.08); }
-  .user-item .user-name { font-size: 12px; font-weight: 600; }
-  .user-item .user-pref { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-  .user-item .user-badge {
-    display: inline-block;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-right: 4px;
-    margin-top: 4px;
-  }
-  .badge-green { background: rgba(92, 184, 92, 0.2); color: var(--green); }
-  .badge-orange { background: rgba(240, 173, 78, 0.2); color: var(--orange); }
-  .badge-purple { background: rgba(155, 89, 182, 0.2); color: var(--purple); }
-  .badge-blue { background: rgba(108, 126, 225, 0.2); color: var(--accent); }
+/* Fields */
+.field { margin-bottom:10px; }
+.field:last-child { margin-bottom:0; }
+.field label { display:block; font-size:12px; color:var(--dim); margin-bottom:3px; }
+.field textarea, .field input, .field select {
+  width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px;
+  color:var(--text); padding:7px 10px; font-size:12px; font-family:inherit; resize:vertical;
+}
+.field textarea { min-height:50px; }
+.field textarea:focus, .field input:focus, .field select:focus {
+  outline:none; border-color:var(--accent);
+}
 
-  /* ─── Content Area ─── */
-  .content-area { display: flex; flex-direction: column; gap: 16px; }
+/* Buttons */
+.btn {
+  padding:7px 18px; border:none; border-radius:6px; cursor:pointer;
+  font-size:13px; font-weight:600; transition:all .2s;
+}
+.btn-p { background:var(--accent); color:#fff; }
+.btn-p:hover { background:#5a6fc7; }
+.btn-p:disabled { opacity:.4; cursor:not-allowed; }
+.btn-s { background:var(--bg); border:1px solid var(--border); color:var(--text); font-weight:400; }
+.btn-s:hover { border-color:var(--accent); }
+.btn-s.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 
-  .content-input textarea {
-    min-height: 100px;
-    font-size: 13px;
-  }
+/* Grid */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid-3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+.grid-side { display:grid; grid-template-columns:280px 1fr; gap:14px; }
 
-  .sample-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-  .sample-btn {
-    padding: 4px 10px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
-    transition: all 0.2s;
-  }
-  .sample-btn:hover { border-color: var(--accent); color: var(--text); }
+/* Segment blocks */
+.seg {
+  background:var(--bg); border-radius:6px; padding:10px 12px; margin-bottom:8px;
+  border-left:3px solid transparent;
+}
+.seg:last-child { margin-bottom:0; }
+.seg.changed { border-left-color:var(--orange); }
+.seg.violation { border-left-color:var(--red); }
+.seg.ok { border-left-color:var(--green); }
+.seg-id { font-size:10px; color:var(--dim); margin-bottom:4px; }
+.seg-txt { font-size:13px; white-space:pre-wrap; }
+.seg-diff {
+  margin-top:6px; padding-top:6px; border-top:1px dashed var(--border);
+}
+.diff-line { font-size:11px; color:var(--dim); margin-top:3px; }
+.diff-line .del { color:var(--red); text-decoration:line-through; }
+.diff-line .add { color:var(--green); }
 
-  .btn-primary {
-    padding: 8px 20px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-  .btn-primary:hover { background: #5a6fc7; }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Result card */
+.rc {
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--r); overflow:hidden;
+}
+.rc-hdr {
+  padding:8px 12px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.rc-name { font-size:13px; font-weight:600; }
+.rc-meta { font-size:11px; color:var(--dim); }
+.rc-bdy { padding:10px 12px; }
+.rc-ftr {
+  padding:6px 12px; border-top:1px solid var(--border); font-size:11px; color:var(--dim);
+  display:flex; justify-content:space-between;
+}
 
-  .btn-secondary {
-    padding: 6px 14px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s;
-  }
-  .btn-secondary:hover { border-color: var(--accent); }
+/* Badges */
+.badge {
+  display:inline-block; font-size:10px; padding:1px 6px; border-radius:3px; margin-right:3px;
+}
+.b-green { background:rgba(92,184,92,.2); color:var(--green); }
+.b-orange { background:rgba(240,173,78,.2); color:var(--orange); }
+.b-purple { background:rgba(155,89,182,.2); color:var(--purple); }
+.b-blue { background:rgba(108,126,225,.2); color:var(--accent); }
+.b-red { background:rgba(217,83,79,.2); color:var(--red); }
+.b-cyan { background:rgba(91,192,222,.2); color:var(--cyan); }
 
-  /* ─── Results ─── */
-  .results-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 14px;
-  }
-  .result-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .result-header {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .result-header .user-tag {
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .result-header .time-tag {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-  .result-body { padding: 12px 14px; }
-  .segment-block {
-    background: var(--bg);
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    border-left: 3px solid transparent;
-  }
-  .segment-block:last-child { margin-bottom: 0; }
-  .segment-block.changed { border-left-color: var(--orange); }
-  .segment-block.removed { border-left-color: var(--red); }
-  .segment-block.added { border-left-color: var(--green); }
-  .segment-id { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
-  .segment-text { font-size: 13px; }
-  .segment-changes {
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px dashed var(--border);
-  }
-  .change-item {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 3px;
-  }
-  .change-item .before { color: var(--red); text-decoration: line-through; }
-  .change-item .after { color: var(--green); }
-  .result-footer {
-    padding: 8px 14px;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--text-dim);
-    display: flex;
-    justify-content: space-between;
-  }
+/* Level buttons */
+.levels { display:flex; gap:4px; }
+.levels button {
+  flex:1; padding:5px; border:1px solid var(--border); background:var(--bg);
+  color:var(--dim); border-radius:4px; cursor:pointer; font-size:11px; transition:all .2s;
+}
+.levels button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 
-  /* ─── Time Selector ─── */
-  .time-selector { display: flex; gap: 4px; margin-top: 6px; }
-  .time-btn {
-    flex: 1;
-    padding: 4px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-dim);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 10px;
-    transition: all 0.2s;
-  }
-  .time-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+/* Time buttons */
+.times { display:flex; gap:3px; margin-top:4px; }
+.times button {
+  flex:1; padding:3px; border:1px solid var(--border); background:var(--bg);
+  color:var(--dim); border-radius:3px; cursor:pointer; font-size:10px; transition:all .2s;
+}
+.times button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 
-  /* ─── Loading ─── */
-  .loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    color: var(--text-dim);
-  }
-  .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-right: 8px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* Loading */
+.loading { display:flex; align-items:center; justify-content:center; padding:30px; color:var(--dim); }
+.spinner {
+  width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent);
+  border-radius:50%; animation:spin .8s linear infinite; margin-right:8px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
 
-  /* ─── Diff View ─── */
-  .diff-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-  .diff-toggle input { cursor: pointer; }
+/* Empty */
+.empty { text-align:center; padding:50px 20px; color:var(--dim); }
+.empty .icon { font-size:40px; margin-bottom:10px; }
 
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-dim);
-  }
-  .empty-state .big-icon { font-size: 48px; margin-bottom: 12px; }
+/* User item */
+.user-item {
+  background:var(--bg); border:1px solid var(--border); border-radius:6px;
+  padding:8px 10px; margin-bottom:6px;
+}
+.user-item .uname { font-size:12px; font-weight:600; }
+.user-item .upref { font-size:11px; color:var(--dim); margin-top:2px; }
 
-  .api-key-field {
-    display: flex;
-    gap: 6px;
-  }
-  .api-key-field input { flex: 1; }
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-  }
-  .status-dot.online { background: var(--green); }
-  .status-dot.offline { background: var(--text-dim); }
+/* Timeline */
+.timeline {
+  position:relative; padding-left:24px;
+}
+.timeline::before {
+  content:''; position:absolute; left:8px; top:0; bottom:0; width:2px;
+  background:var(--border);
+}
+.tl-item {
+  position:relative; margin-bottom:16px;
+}
+.tl-item::before {
+  content:''; position:absolute; left:-20px; top:4px; width:10px; height:10px;
+  border-radius:50%; background:var(--accent); border:2px solid var(--bg);
+}
+.tl-time { font-size:12px; color:var(--accent); font-weight:600; margin-bottom:4px; }
+.tl-content { background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:10px; }
 
-  .comparison-banner {
-    background: linear-gradient(135deg, rgba(108, 126, 225, 0.15), rgba(155, 89, 182, 0.1));
-    border: 1px solid var(--accent-dim);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: var(--text-dim);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .comparison-banner strong { color: var(--text); }
+/* Suggestion popup */
+.suggest-box {
+  background:var(--panel2); border:1px solid var(--accent-d); border-radius:6px;
+  padding:10px 12px; margin-top:8px; position:relative;
+}
+.suggest-box::before {
+  content:'AI 建议'; position:absolute; top:-8px; left:10px;
+  background:var(--accent); color:#fff; font-size:10px; padding:1px 6px; border-radius:3px;
+}
+.suggest-text { font-size:13px; margin-top:4px; }
+.suggest-actions { margin-top:6px; display:flex; gap:6px; }
+
+/* Violation list */
+.violation {
+  background:rgba(217,83,79,.08); border:1px solid rgba(217,83,79,.3); border-radius:6px;
+  padding:8px 10px; margin-bottom:6px;
+}
+.violation .v-type { font-size:12px; font-weight:600; color:var(--red); }
+.violation .v-detail { font-size:11px; color:var(--dim); margin-top:2px; }
+
+/* Pipeline steps */
+.pipeline-step {
+  display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;
+}
+.step-num {
+  width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600;
+  flex-shrink:0;
+}
+.step-num.done { background:var(--green); }
+.step-num.fail { background:var(--red); }
+.step-content { flex:1; }
+.step-title { font-size:13px; font-weight:600; margin-bottom:4px; }
+
+/* Version history */
+.version-entry {
+  background:var(--bg); border:1px solid var(--border); border-radius:6px;
+  padding:8px 10px; margin-bottom:6px; cursor:pointer; transition:all .2s;
+}
+.version-entry:hover { border-color:var(--accent-d); }
+.version-entry.active { border-color:var(--accent); background:rgba(108,126,225,.06); }
+.version-entry .v-id { font-size:11px; color:var(--dim); }
+.version-entry .v-summary { font-size:12px; margin-top:2px; }
+
+/* Info banner */
+.banner {
+  background:linear-gradient(135deg,rgba(108,126,225,.12),rgba(155,89,182,.06));
+  border:1px solid var(--accent-d); border-radius:var(--r); padding:10px 14px;
+  font-size:12px; color:var(--dim); margin-bottom:14px;
+}
+.banner strong { color:var(--text); }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>Content Adaptive Engine <span>· 多模态内容动态自适应</span></h1>
-  <div class="header-actions">
-    <div class="mode-toggle">
-      <button id="modeMock" class="active" onclick="switchMode('mock')">Mock 模式</button>
-      <button id="modeLive" onclick="switchMode('live')">Live API</button>
+<!-- ─── Header ─── -->
+<div class="hdr">
+  <h1>Content Adaptive Engine <span>· 完整功能演示</span></h1>
+  <div class="hdr-right">
+    <div class="api-bar">
+      <span class="status off" id="apiStatusDot"></span>
+      <select id="apiProvider" onchange="onProviderChange()">
+        <option value="zhipu">智谱 GLM</option>
+        <option value="silicon">硅基流动</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="gemini">Gemini</option>
+        <option value="mock">Mock(无需Key)</option>
+      </select>
+      <input type="password" id="apiKey" placeholder="API Key" />
+      <button onclick="connectApi()">连接</button>
     </div>
   </div>
 </div>
 
-<div class="main">
-  <!-- ─── Sidebar: Admin Panel ─── -->
-  <div class="sidebar">
+<!-- ─── Tabs ─── -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('moderate')">发帖审核台</div>
+  <div class="tab" onclick="switchTab('multiuser')">多用户对比</div>
+  <div class="tab" onclick="switchTab('timeline')">时间轴</div>
+  <div class="tab" onclick="switchTab('admin')">管理员面板</div>
+  <div class="tab" onclick="switchTab('suggest')">输入时建议</div>
+  <div class="tab" onclick="switchTab('history')">版本历史</div>
+</div>
 
-    <!-- API Config -->
-    <div class="card" id="apiCard" style="display:none;">
-      <div class="card-header"><span class="icon">🔑</span> DeepSeek API</div>
-      <div class="card-body">
-        <div class="field">
-          <label>API Key</label>
-          <div class="api-key-field">
-            <input type="password" id="apiKey" placeholder="sk-xxx" />
-            <button class="btn-secondary" onclick="testApi()">测试</button>
+<div class="main">
+
+<!-- ═══ Tab 1: 发帖审核台 ═══ -->
+<div class="tab-content active" id="tab-moderate">
+  <div class="banner">
+    <strong>发帖审核台</strong> · 完整流水线：内容审核 → 违规改写 → 改写复验 → 发布/拦截。展示"把内容改得符合规则再发出来"的全过程。
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr">📝 输入内容</div>
+        <div class="card-bdy">
+          <div class="field">
+            <textarea id="modInput" style="min-height:100px;">这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买，买了就是扔钱！不过说实话，它的外观确实还行，颜色搭配挺好看的。</textarea>
           </div>
-        </div>
-        <div class="field">
-          <label>状态: <span id="apiStatus"><span class="status-dot offline"></span> 未连接</span></label>
+          <div class="field">
+            <label>快速示例</label>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button class="btn-s" style="font-size:11px;padding:3px 8px;" onclick="loadModSample('attack')">人身攻击</button>
+              <button class="btn-s" style="font-size:11px;padding:3px 8px;" onclick="loadModSample('fake')">虚假信息</button>
+              <button class="btn-s" style="font-size:11px;padding:3px 8px;" onclick="loadModSample('normal')">正常内容</button>
+              <button class="btn-s" style="font-size:11px;padding:3px 8px;" onclick="loadModSample('mixed')">混合内容</button>
+            </div>
+          </div>
+          <button class="btn btn-p" id="modRunBtn" onclick="runModeration()" style="width:100%;">运行审核流水线</button>
         </div>
       </div>
     </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr">🔍 审核流水线</div>
+        <div class="card-bdy" id="modPipeline">
+          <div class="empty"><div class="icon">⚙️</div><div>点击"运行审核流水线"查看</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <!-- Platform Rules -->
-    <div class="card">
-      <div class="card-header"><span class="icon">📋</span> 平台规则 (管理员)</div>
-      <div class="card-body">
-        <div class="field">
-          <label>内容规则提示词</label>
-          <textarea id="platformRules">平台内容规则：
+<!-- ═══ Tab 2: 多用户对比 ═══ -->
+<div class="tab-content" id="tab-multiuser">
+  <div class="banner">
+    <strong>多用户对比</strong> · 同一条内容，不同用户看到不同版本。展示"不同用户看到内容不一样"。
+  </div>
+  <div class="grid-side">
+    <div>
+      <div class="card">
+        <div class="card-hdr">📝 内容输入</div>
+        <div class="card-bdy">
+          <div class="field">
+            <textarea id="muInput" style="min-height:80px;">这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买，买了就是扔钱！不过说实话，它的外观确实还行，颜色搭配挺好看的，如果质量能跟上就完美了。</textarea>
+          </div>
+          <div class="field">
+            <label>适应级别</label>
+            <div class="levels" id="muLevels">
+              <button data-l="off">关闭</button>
+              <button data-l="light">轻度</button>
+              <button class="active" data-l="moderate">中度</button>
+              <button data-l="aggressive">积极</button>
+            </div>
+          </div>
+          <button class="btn btn-p" id="muRunBtn" onclick="runMultiUser()" style="width:100%;">渲染全部用户</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">👥 用户列表</div>
+        <div class="card-bdy" id="muUsers"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr">📊 渲染结果对比</div>
+        <div class="card-bdy" id="muResults">
+          <div class="empty"><div class="icon">🎨</div><div>点击渲染查看对比</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 3: 时间轴 ═══ -->
+<div class="tab-content" id="tab-timeline">
+  <div class="banner">
+    <strong>时间轴</strong> · 同一用户，不同时间，看到同一内容的不同版本。展示"同一用户不同时间看到的不一样"。
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr">📝 内容 & 用户</div>
+        <div class="card-bdy">
+          <div class="field">
+            <label>内容</label>
+            <textarea id="tlInput" style="min-height:80px;">关于这个新政策，有人支持有人反对。支持的人认为这能促进市场竞争，反对的人担心小企业会被挤垮。我个人觉得两方都有道理。另外，从技术角度看，合规成本不低，中小企业可能需要额外投入20-30%的IT预算。说实话，昨天和朋友聊到这个差点吵起来，但我觉得现实就是这么复杂。</textarea>
+          </div>
+          <div class="field">
+            <label>用户</label>
+            <select id="tlUser">
+              <option value="0">小李 (普通用户)</option>
+              <option value="1">老张 (资深评论员)</option>
+              <option value="2">小美 (情绪敏感用户)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>适应级别</label>
+            <div class="levels" id="tlLevels">
+              <button data-l="off">关闭</button>
+              <button data-l="light">轻度</button>
+              <button class="active" data-l="moderate">中度</button>
+              <button data-l="aggressive">积极</button>
+            </div>
+          </div>
+          <button class="btn btn-p" id="tlRunBtn" onclick="runTimeline()" style="width:100%;">生成时间轴</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr">⏰ 时间轴结果</div>
+        <div class="card-bdy" id="tlResults">
+          <div class="empty"><div class="icon">⏰</div><div>点击生成时间轴</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 4: 管理员面板 ═══ -->
+<div class="tab-content" id="tab-admin">
+  <div class="banner">
+    <strong>管理员面板</strong> · 调整平台规则、社区氛围、适应级别，实时影响内容渲染。展示"想要什么氛围改提示词就行"。
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr">⚙️ 平台配置</div>
+        <div class="card-bdy">
+          <div class="field">
+            <label>平台规则提示词</label>
+            <textarea id="adminRules" style="min-height:100px;">平台内容规则：
 1. 禁止人身攻击、侮辱、谩骂
 2. 禁止虚假信息和恶意造谣
 3. 禁止泄露他人隐私
 4. 禁止煽动仇恨和歧视
 5. 禁止低俗色情内容
 6. 鼓励理性、建设性的讨论</textarea>
-        </div>
-        <div class="field">
-          <label>社区氛围提示词</label>
-          <textarea id="communityVibe">社区氛围设定：
+          </div>
+          <div class="field">
+            <label>社区氛围提示词</label>
+            <textarea id="adminVibe" style="min-height:80px;">社区氛围设定：
 - 友善、包容、理性
 - 鼓励多元观点但反对恶意攻击
 - 对新手友好，乐于解答
 - 讨论以事实为依据</textarea>
-        </div>
-        <div class="field">
-          <label>适应级别</label>
-          <div class="adapt-levels">
-            <button onclick="setAdaptLevel('off')" data-level="off">关闭</button>
-            <button onclick="setAdaptLevel('light')" data-level="light">轻度</button>
-            <button class="active" onclick="setAdaptLevel('moderate')" data-level="moderate">中度</button>
-            <button onclick="setAdaptLevel('aggressive')" data-level="aggressive">积极</button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Users -->
-    <div class="card">
-      <div class="card-header"><span class="icon">👥</span> 用户列表</div>
-      <div class="card-body">
-        <div class="users-list" id="usersList"></div>
-        <button class="btn-secondary" style="width:100%;margin-top:8px;" onclick="addUser()">+ 添加用户</button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ─── Content Area ─── -->
-  <div class="content-area">
-
-    <!-- Content Input -->
-    <div class="card content-input">
-      <div class="card-header">
-        <span class="icon">📝</span> 内容输入
-        <span style="margin-left:auto;font-size:11px;color:var(--text-dim);">输入要测试的内容，然后点击渲染</span>
-      </div>
-      <div class="card-body">
-        <div class="field">
-          <textarea id="contentInput" placeholder="输入内容... 可以是一段产品评价、一条讨论帖、或任何用户生成内容。">这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买，买了就是扔钱！不过说实话，它的外观确实还行，颜色搭配挺好看的，如果质量能跟上就完美了。</textarea>
-        </div>
-        <div class="field">
-          <label>快速示例</label>
-          <div class="sample-btns">
-            <button class="sample-btn" onclick="loadSample('product')">产品评价</button>
-            <button class="sample-btn" onclick="loadSample('policy')">政策讨论</button>
-            <button class="sample-btn" onclick="loadSample('emotion')">情绪宣泄</button>
-            <button class="sample-btn" onclick="loadSample('tech')">技术分享</button>
-            <button class="sample-btn" onclick="loadSample('conflict')">冲突帖</button>
+          <div class="field">
+            <label>适应级别</label>
+            <div class="levels" id="adminLevels">
+              <button data-l="off">关闭</button>
+              <button data-l="light">轻度</button>
+              <button class="active" data-l="moderate">中度</button>
+              <button data-l="aggressive">积极</button>
+            </div>
           </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-top:12px;">
-          <button class="btn-primary" id="renderBtn" onclick="renderAll()">渲染全部用户</button>
-          <button class="btn-secondary" onclick="clearResults()">清空结果</button>
-          <label class="diff-toggle" style="margin-left:auto;">
-            <input type="checkbox" id="showDiff" checked> 显示变更详情
-          </label>
+          <div class="field">
+            <label>测试内容</label>
+            <textarea id="adminInput">你这个白痴，写的什么垃圾代码，脑子是不是有问题？回家种地去吧！</textarea>
+          </div>
+          <div class="field">
+            <label>模拟用户</label>
+            <select id="adminUser">
+              <option value="casual">普通用户 (随意语气)</option>
+              <option value="formal">专业用户 (正式语气)</option>
+              <option value="sensitive">敏感用户 (屏蔽负能量)</option>
+            </select>
+          </div>
+          <button class="btn btn-p" id="adminRunBtn" onclick="runAdmin()" style="width:100%;">应用配置并渲染</button>
         </div>
       </div>
     </div>
-
-    <!-- Results -->
-    <div id="resultsSection">
-      <div class="empty-state" id="emptyState">
-        <div class="big-icon">🎨</div>
-        <div>点击「渲染全部用户」查看效果</div>
-        <div style="font-size:12px;margin-top:4px;">同一条内容将为每个用户生成不同的个性化版本</div>
-      </div>
-      <div id="resultsContent" style="display:none;">
-        <div class="comparison-banner" style="margin-bottom:14px;">
-          <span>📊</span>
-          <span>同一内容 · <strong id="userCountLabel">0</strong> 个用户 · <strong id="versionLabel">0</strong> 个版本</span>
+    <div>
+      <div class="card">
+        <div class="card-hdr">🎯 渲染效果 (配置变更后实时对比)</div>
+        <div class="card-bdy" id="adminResults">
+          <div class="empty"><div class="icon">⚙️</div><div>修改左侧配置后点击渲染</div></div>
         </div>
-        <div class="results-grid" id="resultsGrid"></div>
       </div>
     </div>
-
   </div>
+</div>
+
+<!-- ═══ Tab 5: 输入时建议 ═══ -->
+<div class="tab-content" id="tab-suggest">
+  <div class="banner">
+    <strong>输入时建议</strong> · 打字时实时分析，弹出措辞建议，一键采纳。展示"键入时动态推荐改哪些措辞"。
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr">⌨️ 输入区域</div>
+        <div class="card-bdy">
+          <div class="field">
+            <label>在此输入内容（停顿1秒后自动分析）</label>
+            <textarea id="suggestInput" style="min-height:120px;" placeholder="开始打字..."></textarea>
+          </div>
+          <div class="field">
+            <label>社区规则</label>
+            <textarea id="suggestRules" style="min-height:60px;">禁止人身攻击、谩骂。鼓励友善、建设性的表达。</textarea>
+          </div>
+          <button class="btn btn-p" onclick="analyzeSuggestion()" style="width:100%;">立即分析</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr">💡 AI 建议</div>
+        <div class="card-bdy" id="suggestResults">
+          <div class="empty"><div class="icon">💡</div><div>开始打字，停顿后自动分析</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 6: 版本历史 ═══ -->
+<div class="tab-content" id="tab-history">
+  <div class="banner">
+    <strong>版本历史</strong> · 同一内容的每次渲染都有版本号，可追溯、可对比。展示内容动态自适应的可审计性。
+  </div>
+  <div class="grid-side">
+    <div>
+      <div class="card">
+        <div class="card-hdr">📜 版本列表</div>
+        <div class="card-bdy" id="historyList">
+          <div class="empty"><div class="icon">📜</div><div>先在其他页面渲染内容，版本会自动记录</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr">🔍 版本详情</div>
+        <div class="card-bdy" id="historyDetail">
+          <div class="empty"><div class="icon">📋</div><div>选择左侧版本查看详情</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
-//  State
+//  Global State
 // ═══════════════════════════════════════════════════════════
 
-let mode = 'mock'; // 'mock' | 'live'
-let adaptLevel = 'moderate';
+let provider = 'zhipu';
 let apiKey = '';
 let apiConnected = false;
-let users = createDefaultUsers();
+let versionHistory = [];
 let versionCounter = 0;
 
-const SAMPLES = {
-  product: '这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买，买了就是扔钱！不过说实话，它的外观确实还行，颜色搭配挺好看的，如果质量能跟上就完美了。',
-  policy: '关于这个新政策，有人支持有人反对。支持的人认为这能促进市场竞争，反对的人担心小企业会被挤垮。我个人觉得两方都有道理。另外，从技术角度看，这个政策涉及的合规成本不低，中小企业可能需要额外投入20-30%的IT预算来满足要求。',
-  emotion: '今天心情差到极点，什么都不想做，感觉所有的努力都白费了。为什么生活总是这么难？有没有人能告诉我，这一切到底有什么意义？',
-  tech: 'React 19的新Compiler自动memoizes组件，性能基准测试显示30%的提升。关键是它完全向后兼容，不需要改现有代码。配合Server Components使用效果更佳，但要注意hydration的边界情况。',
-  conflict: '你们这些用iPhone的就是被割韭菜还帮人数钱，花一万块买个信号差的要命的东西还好意思炫耀？安卓随便一台三千块的性能都吊打你们。别跟我扯什么生态，那就是苹果的围墙花园，锁死你们而已。',
+const PROVIDERS = {
+  zhipu:    { base:'https://open.bigmodel.cn/api/paas/v4/chat/completions', model:'glm-4-flash' },
+  silicon:  { base:'https://api.siliconflow.cn/v1/chat/completions', model:'Qwen/Qwen2.5-7B-Instruct' },
+  deepseek: { base:'https://api.deepseek.com/v1/chat/completions', model:'deepseek-chat' },
+  gemini:   { base:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model:'gemini-2.5-flash' },
+  mock:     { base:'', model:'mock' },
 };
 
-function createDefaultUsers() {
-  return [
-    {
-      id: 'user-a',
-      name: '小明',
-      avatar: '👤',
-      tone: 'casual',
-      detail: 'normal',
-      customPrompt: '我是普通消费者，想看真实的产品评价',
-      time: 'morning',
-      excludeSentiments: [],
-      includeTopics: [],
-    },
-    {
-      id: 'user-b',
-      name: '小红',
-      avatar: '👩',
-      tone: 'casual',
-      detail: 'brief',
-      customPrompt: '我今天心情不好，不想看到负能量和负面评价，只想看积极的内容',
-      time: 'night',
-      excludeSentiments: ['negative', 'controversial'],
-      includeTopics: [],
-    },
-    {
-      id: 'user-c',
-      name: '产品经理老王',
-      avatar: '👨‍💼',
-      tone: 'formal',
-      detail: 'detailed',
-      customPrompt: '我是产品经理，需要客观详细的产品反馈信息，用于改进产品',
-      time: 'morning',
-      excludeSentiments: [],
-      includeTopics: ['科技', '产品'],
-    },
-  ];
-}
+const MOD_SAMPLES = {
+  attack: '你这个白痴，写的什么垃圾代码，脑子是不是有问题？回家种地去吧！',
+  fake: '据内部消息，某公司马上要倒闭了，大家快抛售股票，我已经全清了。内幕！',
+  normal: '今天试了新的红烧肉做法，用了冰糖炒糖色，味道比之前好太多了，分享给大家。',
+  mixed: '这手机续航太差了简直是垃圾！不过屏幕确实不错。另外听说某品牌要退出中国市场了，大家怎么看？',
+};
+
+const DEFAULT_USERS = [
+  { id:'a', name:'小明', avatar:'👤', tone:'casual', detail:'normal',
+    customPrompt:'我是普通消费者，想看真实的产品评价', time:'morning',
+    excludeSentiments:[], includeTopics:[] },
+  { id:'b', name:'小红', avatar:'👩', tone:'casual', detail:'brief',
+    customPrompt:'我今天心情不好，不想看到负能量和负面评价，只想看积极的内容', time:'night',
+    excludeSentiments:['negative','controversial'], includeTopics:[] },
+  { id:'c', name:'产品经理老王', avatar:'👨‍💼', tone:'formal', detail:'detailed',
+    customPrompt:'我是产品经理，需要客观详细的产品反馈信息，用于改进产品', time:'morning',
+    excludeSentiments:[], includeTopics:['科技','产品'] },
+];
+
+let muUsers = JSON.parse(JSON.stringify(DEFAULT_USERS));
+let currentLevel = 'moderate';
 
 // ═══════════════════════════════════════════════════════════
-//  UI Rendering
+//  API Layer
 // ═══════════════════════════════════════════════════════════
 
-function renderUsers() {
-  const list = document.getElementById('usersList');
-  list.innerHTML = users.map((u, i) => {
-    const badges = [];
-    if (u.excludeSentiments.includes('negative')) badges.push('<span class="user-badge badge-orange">屏蔽负能量</span>');
-    if (u.excludeSentiments.includes('controversial')) badges.push('<span class="user-badge badge-purple">屏蔽争议</span>');
-    if (u.includeTopics.length) badges.push(`<span class="user-badge badge-blue">偏好: ${u.includeTopics.join(',')}</span>`);
-    if (u.tone === 'formal') badges.push('<span class="user-badge badge-green">正式语气</span>');
-
-    const timeLabels = { morning: '早晨', afternoon: '下午', evening: '傍晚', night: '深夜' };
-
-    return `
-      <div class="user-item" data-index="${i}">
-        <div class="user-name">${u.avatar} ${u.name}</div>
-        <div class="user-pref">${u.customPrompt.slice(0, 50)}...</div>
-        <div>${badges.join('')}</div>
-        <div class="time-selector">
-          ${['morning', 'afternoon', 'evening', 'night'].map(t =>
-            `<button class="time-btn ${u.time === t ? 'active' : ''}" onclick="setUserTime(${i}, '${t}')">${timeLabels[t]}</button>`
-          ).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function setUserTime(index, time) {
-  users[index].time = time;
-  renderUsers();
-}
-
-function setAdaptLevel(level) {
-  adaptLevel = level;
-  document.querySelectorAll('.adapt-levels button').forEach(b => {
-    b.classList.toggle('active', b.dataset.level === level);
+async function callLLM(messages, opts = {}) {
+  if (provider === 'mock' || !apiConnected) {
+    return mockLLM(messages, opts);
+  }
+  const p = PROVIDERS[provider];
+  const res = await fetch(p.base, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: opts.model || p.model,
+      messages,
+      temperature: opts.temperature ?? 0.4,
+      max_tokens: opts.maxTokens ?? 4096,
+    }),
   });
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content ?? '';
 }
 
-function switchMode(m) {
-  mode = m;
-  document.getElementById('modeMock').classList.toggle('active', m === 'mock');
-  document.getElementById('modeLive').classList.toggle('active', m === 'live');
-  document.getElementById('apiCard').style.display = m === 'live' ? '' : 'none';
+async function callLLMJSON(messages, opts = {}) {
+  const raw = await callLLM(messages, opts);
+  const m = raw.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('No JSON in response');
+  return JSON.parse(m[0]);
 }
 
-function loadSample(key) {
-  document.getElementById('contentInput').value = SAMPLES[key];
-}
-
-function clearResults() {
-  document.getElementById('emptyState').style.display = '';
-  document.getElementById('resultsContent').style.display = 'none';
-  document.getElementById('resultsGrid').innerHTML = '';
-}
-
-function addUser() {
-  const id = 'user-' + Date.now();
-  users.push({
-    id, name: '新用户', avatar: '🧑', tone: 'neutral', detail: 'normal',
-    customPrompt: '无特殊偏好', time: 'afternoon',
-    excludeSentiments: [], includeTopics: [],
-  });
-  renderUsers();
-}
-
-async function testApi() {
-  apiKey = document.getElementById('apiKey').value;
-  if (!apiKey) return;
-  document.getElementById('apiStatus').innerHTML = '<span class="status-dot offline"></span> 连接中...';
-  try {
-    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: 'ping' }], max_tokens: 5 }),
-    });
-    if (res.ok) {
-      apiConnected = true;
-      document.getElementById('apiStatus').innerHTML = '<span class="status-dot online"></span> 已连接';
-    } else {
-      document.getElementById('apiStatus').innerHTML = `<span class="status-dot offline"></span> 错误 ${res.status}`;
-    }
-  } catch (e) {
-    document.getElementById('apiStatus').innerHTML = `<span class="status-dot offline"></span> 连接失败`;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  Rendering Engine
-// ═══════════════════════════════════════════════════════════
-
-async function renderAll() {
-  const content = document.getElementById('contentInput').value;
-  if (!content.trim()) return;
-
-  const btn = document.getElementById('renderBtn');
-  btn.disabled = true;
-  btn.textContent = '渲染中...';
-
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('resultsContent').style.display = '';
-  const grid = document.getElementById('resultsGrid');
-  grid.innerHTML = `<div class="loading"><div class="spinner"></div>正在为 ${users.length} 个用户生成个性化版本...</div>`;
-
-  const rules = document.getElementById('platformRules').value;
-  const vibe = document.getElementById('communityVibe').value;
-  const showDiff = document.getElementById('showDiff').checked;
-
-  const results = [];
-  for (const user of users) {
-    try {
-      const result = mode === 'live' && apiConnected
-        ? await renderLive(content, user, rules, vibe, adaptLevel)
-        : await renderMock(content, user, rules, vibe, adaptLevel);
-      results.push({ user, result });
-    } catch (e) {
-      results.push({ user, result: { error: e.message, segments: [{ id: 'seg-1', original: content, adapted: content, changes: [], reason: '渲染失败: ' + e.message }] } });
-    }
-  }
-
-  displayResults(results, showDiff);
-
-  btn.disabled = false;
-  btn.textContent = '渲染全部用户';
-}
-
-async function renderLive(content, user, rules, vibe, level) {
-  const segments = splitContent(content);
-  const adapted = [];
-
-  for (const seg of segments) {
-    const ctxPrompt = buildContextPrompt(user, level);
-    const messages = [
-      {
-        role: 'system',
-        content: `你是一个内容自适应引擎。根据用户上下文调整文本内容。
-
-${rules}
-
-${vibe}
-
-用户上下文：
-${ctxPrompt}
-
-改写原则（适应级别: ${level}）：
-- off: 原样返回
-- light: 微调语气和措辞，不改内容结构
-- moderate: 调整语气、详略、侧重角度，移除违规内容
-- aggressive: 大幅重构，按用户偏好重新组织信息
-
-返回 JSON：
-{"content": "改写后内容", "changes": [{"field": "content", "before": "原文片段", "after": "改后片段", "reason": "原因"}], "adaptationReason": "说明"}
-
-重要：保留核心信息，不编造新事实。`
-      },
-      { role: 'user', content: `原文：${seg}` }
-    ];
-
-    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: 'deepseek-chat', messages, temperature: 0.4, max_tokens: 4096 }),
-    });
-
-    if (!res.ok) throw new Error(`API ${res.status}`);
-    const data = await res.json();
-    const raw = data.choices?.[0]?.message?.content ?? '';
-
-    let parsed;
-    try {
-      const m = raw.match(/\{[\s\S]*\}/);
-      parsed = m ? JSON.parse(m[0]) : { content: raw, changes: [], adaptationReason: '' };
-    } catch {
-      parsed = { content: raw, changes: [], adaptationReason: '' };
-    }
-
-    adapted.push({
-      id: `seg-${adapted.length + 1}`,
-      original: seg,
-      adapted: parsed.content || raw,
-      changes: parsed.changes || [],
-      reason: parsed.adaptationReason || '',
-    });
-  }
-
-  return { segments: adapted };
-}
-
-function renderMock(content, user, rules, vibe, level) {
-  return new Promise((resolve) => {
+function mockLLM(messages, opts) {
+  return new Promise(resolve => {
     setTimeout(() => {
-      const segments = splitContent(content);
-      const adapted = segments.map((seg, i) => {
-        return mockAdapt(seg, user, level, i);
-      });
-      resolve({ segments: adapted });
+      const sysMsg = messages.find(m => m.role === 'system')?.content || '';
+      const userMsg = messages.find(m => m.role === 'user')?.content || '';
+      
+      if (sysMsg.includes('内容审核')) {
+        const isAttack = /白痴|垃圾|脑子有问题|种地|扔钱/.test(userMsg);
+        const isFake = /内部消息|倒闭|抛售|内幕/.test(userMsg);
+        const violations = [];
+        if (isAttack) violations.push({type:'人身攻击',severity:'high',snippet:'白痴/垃圾/脑子有问题',reason:'使用侮辱性语言'});
+        if (isFake) violations.push({type:'虚假信息',severity:'high',snippet:'内部消息/倒闭',reason:'未经证实的信息'});
+        resolve(JSON.stringify({passed:violations.length===0,violations,summary:violations.length?`检测到${violations.length}处违规`:'内容合规'}));
+        return;
+      }
+      if (sysMsg.includes('改写')) {
+        let rewritten = userMsg.replace(/简直是垃圾/g,'有很大改进空间').replace(/白痴/g,'不太了解情况的朋友')
+          .replace(/脑子是不是有问题/g,'可能需要再学习一下').replace(/回家种地去吧/g,'建议转行')
+          .replace(/千万别买/g,'建议谨慎考虑').replace(/扔钱/g,'不太划算')
+          .replace(/据内部消息/g,'据传').replace(/马上要倒闭了/g,'经营状况可能存在不确定性')
+          .replace(/快抛售/g,'建议关注风险').replace(/内幕/g,'市场传闻');
+        resolve(JSON.stringify({content:rewritten,changes:[{field:'content',before:userMsg.slice(0,30),after:rewritten.slice(0,30),reason:'移除攻击性/不实表述'}],adaptationReason:'已将攻击性语言改为中性表述，移除未经证实的信息'}));
+        return;
+      }
+      if (sysMsg.includes('复验')) {
+        resolve(JSON.stringify({passed:true,intentPreserved:true,intentAnalysis:'改写保留了原文核心观点，仅调整了表达方式'}));
+        return;
+      }
+      if (sysMsg.includes('自适应') || sysMsg.includes('调整文本')) {
+        const ctxMatch = sysMsg.match(/用户: (.+)/);
+        const userName = ctxMatch ? ctxMatch[1].split('\n')[0] : '用户';
+        let adapted = userMsg;
+        const changes = [];
+        if (/屏蔽负能量|negative/.test(sysMsg)) {
+          adapted = adapted.replace(/简直是垃圾/g,'有很大改进空间').replace(/千万别买/g,'建议谨慎考虑')
+            .replace(/扔钱/g,'不太划算').replace(/不耐烦/g,'有提升空间');
+          changes.push({field:'content',before:'垃圾/千万别买',after:'改进空间/谨慎考虑',reason:'用户偏好：屏蔽负能量'});
+        }
+        if (/formal|正式/.test(sysMsg)) {
+          adapted = adapted.replace(/还行/g,'尚可').replace(/挺好的/g,'较为出色').replace(/说实话/g,'客观而言');
+          changes.push({field:'content',before:'还行/挺好的',after:'尚可/较为出色',reason:'正式语气'});
+        }
+        if (/brief|简要/.test(sysMsg) && adapted.length > 100) {
+          const s = adapted.split(/[。！？]/).filter(x=>x.trim());
+          adapted = s.slice(0,2).join('。')+'。';
+          changes.push({field:'content',before:userMsg.slice(0,30),after:adapted.slice(0,30),reason:'简要模式'});
+        }
+        if (/night|夜间/.test(sysMsg) && adapted.length > 120) {
+          const s = adapted.split(/[。！？]/).filter(x=>x.trim());
+          adapted = s.slice(0,2).join('。')+'。';
+          changes.push({field:'content',before:userMsg.slice(0,30),after:adapted.slice(0,30),reason:'夜间简化'});
+        }
+        if (/detailed|aggressive|产品经理/.test(sysMsg) && changes.length === 0) {
+          adapted += '\n\n[补充分析] 从产品角度看，用户反馈涉及质量管控和售后服务两个核心环节。外观设计获得正面反馈，说明工业设计方向正确，但品控和客服流程需要优化。';
+          changes.push({field:'content',before:userMsg.slice(0,30),after:adapted.slice(0,30),reason:'补充专业分析'});
+        }
+        resolve(JSON.stringify({content:adapted,changes,adaptationReason:changes.length?changes.map(c=>c.reason).join('；'):'内容无需调整'}));
+        return;
+      }
+      if (sysMsg.includes('建议') && sysMsg.includes('措辞')) {
+        const issues = [];
+        if (/白痴|垃圾/.test(userMsg)) issues.push({original:'白痴/垃圾',suggestion:'可能不够友善，建议改为"有很大改进空间"',reason:'人身攻击'});
+        if (/千万别买|扔钱/.test(userMsg)) issues.push({original:'千万别买/扔钱',suggestion:'建议改为"建议谨慎考虑"',reason:'过激表述'});
+        if (/据内部消息|倒闭/.test(userMsg)) issues.push({original:'据内部消息',suggestion:'未经证实，建议改为"据传"',reason:'虚假信息'});
+        resolve(JSON.stringify({suggestions:issues,overallTone:issues.length?'内容包含攻击性/不实表述':'内容语气友善'}));
+        return;
+      }
+      if (sysMsg.includes('标注') || sysMsg.includes('分类')) {
+        resolve(JSON.stringify({categories:['科技','产品'],sentiment:'negative',energyLevel:'high-energy',topics:['产品评价'],keywords:['产品','质量','客服']})); return;
+      }
+      resolve(userMsg);
     }, 300 + Math.random() * 400);
   });
 }
 
-function mockAdapt(text, user, level, index) {
-  let adapted = text;
-  const changes = [];
-  let reason = '';
+// ═══════════════════════════════════════════════════════════
+//  API Connection
+// ═══════════════════════════════════════════════════════════
 
-  if (level === 'off') {
-    return { id: `seg-${index+1}`, original: text, adapted: text, changes: [], reason: '适应关闭，原样返回' };
+function onProviderChange() {
+  provider = document.getElementById('apiProvider').value;
+  apiConnected = false;
+  updateApiStatus();
+  if (provider === 'mock') {
+    apiConnected = true;
+    updateApiStatus();
   }
-
-  const isNegative = /垃圾|差|烂|白痴|别买|扔钱|气死|心情差|没有意义|割韭菜|吊打|炫耀|围墙花园/.test(text);
-  const isAttack = /白痴|垃圾|割韭菜|帮人数钱|吊打/.test(text);
-  const isEmotional = /心情差|极点|白费|没有意义|为什么生活/.test(text);
-
-  if (isAttack && level !== 'light') {
-    const original = adapted;
-    adapted = adapted
-      .replace(/简直是垃圾/g, '有很大改进空间')
-      .replace(/白痴/g, '不太了解情况的朋友')
-      .replace(/割韭菜还帮人数钱/g, '花费较高')
-      .replace(/吊打/g, '在某些方面有优势')
-      .replace(/别跟我扯什么/g, '关于')
-      .replace(/围墙花园/g, '封闭生态')
-      .replace(/别买/g, '建议谨慎考虑')
-      .replace(/扔钱/g, '不太划算');
-    if (original !== adapted) {
-      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '移除人身攻击和过激言辞' });
-      reason = '将攻击性语言改为中性表述';
-    }
-  }
-
-  if (user.excludeSentiments.includes('negative') && isNegative) {
-    const original = adapted;
-    if (level === 'moderate' || level === 'aggressive') {
-      adapted = adapted
-        .replace(/用了三天就坏了/g, '耐用性可能需要关注')
-        .replace(/客服还一脸不耐烦/g, '客服体验有提升空间')
-        .replace(/心情差到极点/g, '最近遇到了一些挑战')
-        .replace(/什么都不想做/g, '需要一些时间调整')
-        .replace(/所有的努力都白费了/g, '有时会感到付出与回报不成正比')
-        .replace(/生活总是这么难/g, '生活中总有起伏');
-      if (original !== adapted) {
-        changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '用户偏好：屏蔽负能量' });
-        reason += (reason ? '；' : '') + '软化负面表述，适应用户情绪状态';
-      }
-    }
-  }
-
-  if (isEmotional && user.excludeSentiments.includes('negative')) {
-    if (level === 'aggressive') {
-      const original = adapted;
-      adapted = '生活中难免有低谷期，这是很正常的感受。也许可以试着和信任的人聊聊，或者给自己放个假。如果持续感到低落，也可以考虑寻求专业支持。';
-      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '积极适应：将情绪宣泄转为温暖建议' });
-      reason += (reason ? '；' : '') + '积极适应，提供温暖替代';
-    }
-  }
-
-  if (user.detail === 'brief' && text.length > 100) {
-    const sentences = adapted.split(/[。！？]/).filter(s => s.trim());
-    if (sentences.length > 2) {
-      const original = adapted;
-      adapted = sentences.slice(0, 2).join('。') + '。';
-      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '用户偏好：简要模式，压缩为要点' });
-      reason += (reason ? '；' : '') + '压缩为要点';
-    }
-  }
-
-  if (user.tone === 'formal' && level !== 'light') {
-    const original = adapted;
-    adapted = adapted
-      .replace(/不行/g, '欠佳')
-      .replace(/还行/g, '尚可')
-      .replace(/挺好的/g, '较为出色')
-      .replace(/说实话/g, '客观而言')
-      .replace(/大家/g, '各位用户');
-    if (original !== adapted) {
-      changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '用户偏好：正式语气' });
-      reason += (reason ? '；' : '') + '调整为正式语气';
-    }
-  }
-
-  if (user.time === 'night' && level !== 'light') {
-    if (adapted.length > 150 && user.detail !== 'detailed') {
-      const original = adapted;
-      const sentences = adapted.split(/[。！？]/).filter(s => s.trim());
-      adapted = sentences.slice(0, 2).join('。') + '。';
-      if (original !== adapted) {
-        changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '夜间浏览：简化内容' });
-        reason += (reason ? '；' : '') + '夜间简化';
-      }
-    }
-  }
-
-  if (user.detail === 'detailed' && level === 'aggressive' && !isAttack) {
-    const original = adapted;
-    adapted = adapted + '\n\n[补充分析] 从产品角度看，用户反馈涉及质量管控和售后服务两个核心环节。外观设计获得正面反馈，说明工业设计方向正确，但品控和客服流程需要优化。建议关注：1) 退换货流程 2) 客服培训 3) 质量检测标准。';
-    changes.push({ field: 'content', before: original.slice(0, 40), after: adapted.slice(0, 40), reason: '产品经理视角：补充专业分析' });
-    reason += (reason ? '；' : '') + '补充专业分析';
-  }
-
-  if (changes.length === 0) {
-    reason = '内容无需调整，保留原文';
-  }
-
-  return {
-    id: `seg-${index + 1}`,
-    original: text,
-    adapted,
-    changes,
-    reason,
-  };
 }
 
-function splitContent(text) {
-  if (text.length < 200) return [text];
-  const sentences = text.split(/(?<=[。！？])/);
-  const segments = [];
-  let current = '';
-  for (const s of sentences) {
-    current += s;
-    if (current.length >= 150) {
-      segments.push(current);
-      current = '';
+async function connectApi() {
+  apiKey = document.getElementById('apiKey').value;
+  if (!apiKey && provider !== 'mock') { alert('请输入 API Key'); return; }
+  if (provider === 'mock') { apiConnected = true; updateApiStatus(); return; }
+  
+  document.getElementById('apiStatusDot').className = 'status off';
+  try {
+    const p = PROVIDERS[provider];
+    const res = await fetch(p.base, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${apiKey}` },
+      body: JSON.stringify({ model:p.model, messages:[{role:'user',content:'hi'}], max_tokens:5 }),
+    });
+    apiConnected = res.ok;
+    if (!apiConnected) {
+      const err = await res.text();
+      alert(`连接失败: ${res.status} ${err.slice(0,100)}`);
     }
+  } catch(e) {
+    apiConnected = false;
+    alert(`连接失败: ${e.message}`);
   }
-  if (current) segments.push(current);
-  return segments;
+  updateApiStatus();
 }
 
-function buildContextPrompt(user, level) {
-  const lines = [
-    `用户: ${user.name}`,
-    `偏好语气: ${user.tone}`,
-    `偏好详略: ${user.detail}`,
-    `时间: ${user.time}`,
-  ];
-  if (user.includeTopics.length) lines.push(`偏好主题: ${user.includeTopics.join(', ')}`);
-  if (user.excludeSentiments.length) lines.push(`排除情感: ${user.excludeSentiments.join(', ')}`);
-  if (user.customPrompt) lines.push(`自定义偏好: ${user.customPrompt}`);
-  if (user.time === 'night') lines.push('注意: 用户在夜间浏览，偏好轻松简短的内容');
-  if (user.time === 'morning') lines.push('注意: 用户在早晨浏览，偏好信息密度高的内容');
-  return lines.join('\n');
+function updateApiStatus() {
+  document.getElementById('apiStatusDot').className = apiConnected ? 'status on' : 'status off';
 }
 
-function displayResults(results, showDiff) {
-  const grid = document.getElementById('resultsGrid');
-  const timeLabels = { morning: '早晨', afternoon: '下午', evening: '傍晚', night: '深夜' };
+// ═══════════════════════════════════════════════════════════
+//  Tab Switching
+// ═══════════════════════════════════════════════════════════
 
-  document.getElementById('userCountLabel').textContent = results.length;
-  document.getElementById('versionLabel').textContent = results.length;
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['moderate','multiuser','timeline','admin','suggest','history'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
 
-  grid.innerHTML = results.map(({ user, result }) => {
-    versionCounter++;
-    const versionId = `v-${Date.now()}-${versionCounter}`;
-    const segs = result.segments || [];
-    const adaptedCount = segs.filter(s => s.changes.length > 0).length;
-    const changesCount = segs.reduce((sum, s) => sum + s.changes.length, 0);
+// ═══════════════════════════════════════════════════════════
+//  Tab 1: 发帖审核台
+// ═══════════════════════════════════════════════════════════
 
-    const segBlocks = segs.map(seg => {
-      const hasChanges = seg.changes.length > 0;
-      const changed = seg.original !== seg.adapted;
-      const cls = changed ? 'changed' : '';
+function loadModSample(key) { document.getElementById('modInput').value = MOD_SAMPLES[key]; }
 
-      return `
-        <div class="segment-block ${cls}">
-          <div class="segment-id">${seg.id} ${changed ? '· 已改写' : '· 原样保留'}</div>
-          <div class="segment-text">${escapeHtml(seg.adapted)}</div>
-          ${showDiff && hasChanges ? `
-            <div class="segment-changes">
-              ${seg.changes.map(c => `
-                <div class="change-item">
-                  <span class="before">${escapeHtml(c.before)}</span>
-                  →
-                  <span class="after">${escapeHtml(c.after)}</span>
-                  (${escapeHtml(c.reason)})
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
-          ${seg.reason ? `<div class="change-item" style="margin-top:4px;">原因: ${escapeHtml(seg.reason)}</div>` : ''}
-        </div>
-      `;
-    }).join('');
+async function runModeration() {
+  const content = document.getElementById('modInput').value;
+  if (!content.trim()) return;
+  const btn = document.getElementById('modRunBtn');
+  btn.disabled = true; btn.textContent = '运行中...';
+  
+  const pipeline = document.getElementById('modPipeline');
+  pipeline.innerHTML = '<div class="loading"><div class="spinner"></div>审核中...</div>';
+  
+  const rules = document.getElementById('adminRules').value || '禁止人身攻击、虚假信息、谩骂';
+  const vibe = document.getElementById('adminVibe').value || '友善、理性';
+  
+  let html = '';
+  
+  // Step 1: 审核
+  html += '<div class="pipeline-step"><div class="step-num">1</div><div class="step-content"><div class="step-title">内容审核</div>';
+  try {
+    const mod = await callLLMJSON([
+      {role:'system',content:`你是一个内容审核助手。根据以下规则审核内容，返回JSON：{"passed":bool,"violations":[{"type":"","severity":"low/medium/high","snippet":"","reason":""}],"summary":""}\n\n规则：\n${rules}`},
+      {role:'user',content:`审核以下内容：\n${content}`}
+    ], {temperature:0.1});
+    
+    html += `<div>审核结果: ${mod.passed ? '<span class="badge b-green">通过</span>' : '<span class="badge b-red">未通过</span>'}</div>`;
+    html += `<div style="font-size:12px;color:var(--dim);margin-top:4px;">${mod.summary}</div>`;
+    if (mod.violations?.length) {
+      html += '<div style="margin-top:6px;">';
+      mod.violations.forEach(v => {
+        html += `<div class="violation"><div class="v-type">${v.type} [${v.severity}]</div><div class="v-detail">片段: "${v.snippet}" — ${v.reason}</div></div>`;
+      });
+      html += '</div>';
+    }
+    html += '</div></div>';
+    
+    if (mod.passed) {
+      html += '<div class="pipeline-step"><div class="step-num done">2</div><div class="step-content"><div class="step-title">内容合规，直接发布</div><div class="seg ok"><div class="seg-id">原文保留</div><div class="seg-txt">' + esc(content) + '</div></div></div></div>';
+      pipeline.innerHTML = html;
+      recordVersion('moderate', content, content, mod.passed ? '合规通过' : '违规拦截', []);
+      btn.disabled = false; btn.textContent = '运行审核流水线';
+      return;
+    }
+    
+    // Step 2: 改写
+    html += '<div class="pipeline-step"><div class="step-num">2</div><div class="step-content"><div class="step-title">内容改写</div>';
+    const rewrite = await callLLMJSON([
+      {role:'system',content:`你是一个内容改写助手。将违规内容改写为合规版本，保留核心意图。\n\n规则：\n${rules}\n\n氛围：\n${vibe}\n\n返回JSON：{"content":"","changes":[{"field":"","before":"","after":"","reason":""}],"adaptationReason":""}\n\n只输出JSON。`},
+      {role:'user',content:`原文：${content}\n\n违规：${JSON.stringify(mod.violations)}\n\n请改写。`}
+    ], {temperature:0.4});
+    
+    html += `<div class="seg changed"><div class="seg-id">改写版本</div><div class="seg-txt">${esc(rewrite.content)}</div>`;
+    if (rewrite.changes?.length) {
+      html += '<div class="seg-diff">';
+      rewrite.changes.forEach(c => {
+        html += `<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`;
+      });
+      html += '</div>';
+    }
+    html += `<div class="diff-line">原因: ${esc(rewrite.adaptationReason)}</div></div></div></div>`;
+    
+    // Step 3: 复验
+    html += '<div class="pipeline-step"><div class="step-num">3</div><div class="step-content"><div class="step-title">改写复验</div>';
+    const verify = await callLLMJSON([
+      {role:'system',content:`你是一个审核助手。判断改写后的内容是否合规且保留了原文意图。返回JSON：{"passed":bool,"intentPreserved":bool,"intentAnalysis":""}`},
+      {role:'user',content:`原文：${content}\n\n改写后：${rewrite.content}\n\n规则：${rules}`}
+    ], {temperature:0.1});
+    
+    html += `<div>合规: ${verify.passed ? '<span class="badge b-green">是</span>' : '<span class="badge b-red">否</span>'} 意图保留: ${verify.intentPreserved ? '<span class="badge b-green">是</span>' : '<span class="badge b-red">否</span>'}</div>`;
+    html += `<div style="font-size:12px;color:var(--dim);margin-top:4px;">${esc(verify.intentAnalysis)}</div></div></div>`;
+    
+    // Final
+    const finalPassed = verify.passed && verify.intentPreserved;
+    html += `<div class="pipeline-step"><div class="step-num ${finalPassed?'done':'fail'}">${finalPassed?'✓':'✗'}</div><div class="step-content"><div class="step-title">${finalPassed?'发布改写版本':'拦截发布'}</div><div style="font-size:12px;color:var(--dim);">${finalPassed?'内容已通过审核并保留原始意图，可以发布':'改写版本未通过复验，建议人工审核'}</div></div></div>`;
+    
+    pipeline.innerHTML = html;
+    recordVersion('moderate', content, rewrite.content, finalPassed?'改写后发布':'拦截', rewrite.changes||[]);
+    
+  } catch(e) {
+    html += `<div style="color:var(--red);">错误: ${esc(e.message)}</div></div></div>`;
+    pipeline.innerHTML = html;
+  }
+  btn.disabled = false; btn.textContent = '运行审核流水线';
+}
 
-    return `
-      <div class="result-card">
-        <div class="result-header">
-          <span class="user-tag">${user.avatar} ${user.name}</span>
-          <span class="time-tag">${timeLabels[user.time]} · ${adaptLevel}</span>
-        </div>
-        <div class="result-body">
-          ${segBlocks}
-        </div>
-        <div class="result-footer">
-          <span>版本 ${versionId.slice(-8)}</span>
-          <span>改写 ${adaptedCount}/${segs.length} 段 · ${changesCount} 处变更</span>
-        </div>
-      </div>
-    `;
+// ═══════════════════════════════════════════════════════════
+//  Tab 2: 多用户对比
+// ═══════════════════════════════════════════════════════════
+
+function renderMuUsers() {
+  const timeLabels = {morning:'早',afternoon:'午',evening:'晚',night:'夜'};
+  document.getElementById('muUsers').innerHTML = muUsers.map((u,i) => {
+    const badges = [];
+    if (u.excludeSentiments.includes('negative')) badges.push('<span class="badge b-orange">屏蔽负能量</span>');
+    if (u.excludeSentiments.includes('controversial')) badges.push('<span class="badge b-purple">屏蔽争议</span>');
+    if (u.tone==='formal') badges.push('<span class="badge b-green">正式</span>');
+    if (u.detail==='brief') badges.push('<span class="badge b-cyan">简要</span>');
+    if (u.detail==='detailed') badges.push('<span class="badge b-blue">详细</span>');
+    return `<div class="user-item"><div class="uname">${u.avatar} ${u.name}</div><div class="upref">${esc(u.customPrompt.slice(0,40))}...</div><div style="margin-top:3px;">${badges.join('')}</div><div class="times">${['morning','afternoon','evening','night'].map(t=>`<button class="${u.time===t?'active':''}" onclick="setMuTime(${i},'${t}')">${timeLabels[t]}</button>`).join('')}</div></div>`;
   }).join('');
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+function setMuTime(i,t) { muUsers[i].time=t; renderMuUsers(); }
+
+document.getElementById('muLevels')?.addEventListener('click', e => {
+  if (e.target.dataset.l) {
+    currentLevel = e.target.dataset.l;
+    document.querySelectorAll('#muLevels button').forEach(b => b.classList.toggle('active', b.dataset.l === currentLevel));
+  }
+});
+
+async function runMultiUser() {
+  const content = document.getElementById('muInput').value;
+  if (!content.trim()) return;
+  const btn = document.getElementById('muRunBtn');
+  btn.disabled=true; btn.textContent='渲染中...';
+  
+  const rules = document.getElementById('adminRules').value;
+  const vibe = document.getElementById('adminVibe').value;
+  const grid = document.getElementById('muResults');
+  grid.innerHTML = `<div class="loading"><div class="spinner"></div>为 ${muUsers.length} 个用户渲染中...</div>`;
+  
+  const results = [];
+  for (const user of muUsers) {
+    try {
+      const result = await adaptForUser(content, user, rules, vibe, currentLevel);
+      results.push({user, result});
+    } catch(e) {
+      results.push({user, result:{content, changes:[], reason:'Error: '+e.message}});
+    }
+  }
+  
+  const timeLabels = {morning:'早晨',afternoon:'下午',evening:'傍晚',night:'深夜'};
+  grid.innerHTML = '<div class="grid-3">' + results.map(({user,result}) => {
+    const changed = result.content !== content;
+    return `<div class="rc"><div class="rc-hdr"><span class="rc-name">${user.avatar} ${user.name}</span><span class="rc-meta">${timeLabels[user.time]} · ${currentLevel}</span></div><div class="rc-bdy"><div class="seg ${changed?'changed':'ok'}"><div class="seg-id">${changed?'已改写':'原样保留'}</div><div class="seg-txt">${esc(result.content)}</div>${result.changes?.length?`<div class="seg-diff">${result.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`).join('')}</div>`:''}${result.reason?`<div class="diff-line">原因: ${esc(result.reason)}</div>`:''}</div></div><div class="rc-ftr"><span>v${Date.now().toString(36).slice(-6)}</span><span>${result.changes?.length||0} 处变更</span></div></div>`;
+  }).join('') + '</div>';
+  
+  results.forEach(({user,result}) => {
+    recordVersion('multiuser', content, result.content, `${user.name} · ${timeLabels[user.time]}`, result.changes||[]);
+  });
+  
+  btn.disabled=false; btn.textContent='渲染全部用户';
 }
+
+async function adaptForUser(content, user, rules, vibe, level) {
+  const ctxPrompt = `用户: ${user.name}\n偏好语气: ${user.tone}\n偏好详略: ${user.detail}\n时间: ${user.time}\n${user.excludeSentiments.length?'排除情感: '+user.excludeSentiments.join(',')+'\n':''}${user.customPrompt?'自定义: '+user.customPrompt+'\n':''}${user.time==='night'?'注意: 夜间浏览，偏好轻松简短\n':''}${user.time==='morning'?'注意: 早晨，偏好信息密度高\n':''}`;
+  
+  const result = await callLLMJSON([
+    {role:'system',content:`你是一个内容自适应引擎。根据用户上下文调整文本。\n\n${rules}\n\n${vibe}\n\n用户上下文：\n${ctxPrompt}\n\n适应级别: ${level}\noff=原样返回, light=微调语气, moderate=调整语气/详略/侧重, aggressive=大幅重构\n\n返回JSON：{"content":"","changes":[{"field":"","before":"","after":"","reason":""}],"adaptationReason":""}`},
+    {role:'user',content:`原文：${content}`}
+  ], {temperature:0.4});
+  
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 3: 时间轴
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById('tlLevels')?.addEventListener('click', e => {
+  if (e.target.dataset.l) {
+    currentLevel = e.target.dataset.l;
+    document.querySelectorAll('#tlLevels button').forEach(b => b.classList.toggle('active', b.dataset.l === currentLevel));
+  }
+});
+
+const TL_USERS = [
+  { name:'小李', tone:'casual', detail:'normal', customPrompt:'普通用户，无特殊偏好', excludeSentiments:[] },
+  { name:'老张', tone:'formal', detail:'detailed', customPrompt:'资深评论员，需要深度分析', excludeSentiments:[] },
+  { name:'小美', tone:'casual', detail:'brief', customPrompt:'情绪敏感，不想看争议和负能量', excludeSentiments:['negative','controversial'] },
+];
+
+async function runTimeline() {
+  const content = document.getElementById('tlInput').value;
+  if (!content.trim()) return;
+  const btn = document.getElementById('tlRunBtn');
+  btn.disabled=true; btn.textContent='生成中...';
+  
+  const userIdx = parseInt(document.getElementById('tlUser').value);
+  const user = TL_USERS[userIdx];
+  const rules = document.getElementById('adminRules').value;
+  const vibe = document.getElementById('adminVibe').value;
+  
+  const times = [
+    {label:'早晨 7:30', time:'morning', note:'精力充沛，想看深度分析'},
+    {label:'午休 12:30', time:'afternoon', note:'快速浏览，轻松模式'},
+    {label:'傍晚 18:30', time:'evening', note:'下班放松，中等详细'},
+    {label:'深夜 23:00', time:'night', note:'不想看争议，平静模式'},
+  ];
+  
+  const results = document.getElementById('tlResults');
+  results.innerHTML = '<div class="loading"><div class="spinner"></div>生成时间轴中...</div>';
+  
+  let html = '<div class="timeline">';
+  for (const t of times) {
+    const u = {...user, time:t.time, customPrompt: user.customPrompt + '；' + t.note};
+    const result = await adaptForUser(content, u, rules, vibe, currentLevel);
+    const changed = result.content !== content;
+    html += `<div class="tl-item"><div class="tl-time">${t.label} · ${t.note}</div><div class="tl-content"><div class="seg ${changed?'changed':'ok'}"><div class="seg-id">${changed?'已调整':'原样保留'} · ${result.changes?.length||0} 处变更</div><div class="seg-txt">${esc(result.content)}</div>${result.changes?.length?`<div class="seg-diff">${result.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span></div>`).join('')}</div>`:''}${result.reason?`<div class="diff-line">原因: ${esc(result.reason)}</div>`:''}</div></div></div>`;
+    recordVersion('timeline', content, result.content, `${user.name} · ${t.label}`, result.changes||[]);
+  }
+  html += '</div>';
+  results.innerHTML = html;
+  btn.disabled=false; btn.textContent='生成时间轴';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 4: 管理员面板
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById('adminLevels')?.addEventListener('click', e => {
+  if (e.target.dataset.l) {
+    currentLevel = e.target.dataset.l;
+    document.querySelectorAll('#adminLevels button').forEach(b => b.classList.toggle('active', b.dataset.l === currentLevel));
+  }
+});
+
+async function runAdmin() {
+  const content = document.getElementById('adminInput').value;
+  if (!content.trim()) return;
+  const btn = document.getElementById('adminRunBtn');
+  btn.disabled=true; btn.textContent='渲染中...';
+  
+  const rules = document.getElementById('adminRules').value;
+  const vibe = document.getElementById('adminVibe').value;
+  const userType = document.getElementById('adminUser').value;
+  
+  const userMap = {
+    casual: {name:'普通用户',tone:'casual',detail:'normal',customPrompt:'普通浏览',time:'morning',excludeSentiments:[]},
+    formal: {name:'专业用户',tone:'formal',detail:'detailed',customPrompt:'需要专业详细的信息',time:'morning',excludeSentiments:[]},
+    sensitive: {name:'敏感用户',tone:'casual',detail:'brief',customPrompt:'不想看负能量',time:'night',excludeSentiments:['negative']},
+  };
+  const user = userMap[userType];
+  
+  const results = document.getElementById('adminResults');
+  results.innerHTML = '<div class="loading"><div class="spinner"></div>渲染中...</div>';
+  
+  // 先显示原文
+  let html = `<div class="seg violation"><div class="seg-id">原文</div><div class="seg-txt">${esc(content)}</div></div>`;
+  html += '<div style="text-align:center;font-size:12px;color:var(--dim);margin:8px 0;">↓ 应用规则 + 氛围 + 适应级别 ↓</div>';
+  
+  try {
+    const result = await adaptForUser(content, user, rules, vibe, currentLevel);
+    const changed = result.content !== content;
+    html += `<div class="seg ${changed?'changed':'ok'}"><div class="seg-id">${user.name} · ${currentLevel} · ${changed?'已改写':'原样保留'}</div><div class="seg-txt">${esc(result.content)}</div>`;
+    if (result.changes?.length) {
+      html += '<div class="seg-diff">';
+      result.changes.forEach(c => {
+        html += `<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`;
+      });
+      html += '</div>';
+    }
+    html += result.reason?`<div class="diff-line">原因: ${esc(result.reason)}</div>`:'';
+    html += '</div>';
+    
+    html += '<div style="margin-top:10px;font-size:12px;color:var(--dim);">当前配置:</div>';
+    html += `<div style="font-size:11px;color:var(--dim);margin-top:4px;">规则: ${esc(rules.slice(0,60))}... | 氛围: ${esc(vibe.slice(0,40))}... | 级别: ${currentLevel} | 用户: ${user.name}</div>`;
+  } catch(e) {
+    html += `<div style="color:var(--red);">错误: ${esc(e.message)}</div>`;
+  }
+  results.innerHTML = html;
+  btn.disabled=false; btn.textContent='应用配置并渲染';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 5: 输入时建议
+// ═══════════════════════════════════════════════════════════
+
+let suggestTimer = null;
+document.getElementById('suggestInput')?.addEventListener('input', () => {
+  clearTimeout(suggestTimer);
+  suggestTimer = setTimeout(() => {
+    const text = document.getElementById('suggestInput').value;
+    if (text.length > 10) analyzeSuggestion();
+  }, 1000);
+});
+
+async function analyzeSuggestion() {
+  const text = document.getElementById('suggestInput').value;
+  if (!text.trim()) return;
+  const rules = document.getElementById('suggestRules').value;
+  const results = document.getElementById('suggestResults');
+  
+  results.innerHTML = '<div class="loading"><div class="spinner"></div>分析中...</div>';
+  
+  try {
+    const result = await callLLMJSON([
+      {role:'system',content:`你是一个写作建议助手。分析用户输入的内容，找出可能不友善、不合规或表达不清的措辞，给出修改建议。\n\n规则：${rules}\n\n返回JSON：{"suggestions":[{"original":"","suggestion":"","reason":""}],"overallTone":""}`},
+      {role:'user',content:text}
+    ], {temperature:0.3});
+    
+    if (!result.suggestions?.length) {
+      results.innerHTML = `<div class="seg ok"><div class="seg-id">分析完成</div><div class="seg-txt">内容语气友善，无需调整。整体语气：${esc(result.overallTone||'良好')}</div></div>`;
+      return;
+    }
+    
+    let html = `<div style="margin-bottom:8px;font-size:12px;color:var(--dim);">整体语气: ${esc(result.overallTone||'')}</div>`;
+    result.suggestions.forEach((s,i) => {
+      html += `<div class="suggest-box"><div class="suggest-text">原文: <span style="color:var(--red);">${esc(s.original)}</span></div><div class="suggest-text" style="margin-top:4px;">建议: <span style="color:var(--green);">${esc(s.suggestion)}</span></div><div class="diff-line">原因: ${esc(s.reason)}</div><div class="suggest-actions"><button class="btn btn-p" style="font-size:11px;padding:3px 10px;" onclick="acceptSuggestion(${i})">采纳</button><button class="btn btn-s" style="font-size:11px;padding:3px 10px;" onclick="dismissSuggestion(${i})">忽略</button></div></div>`;
+    });
+    
+    window._lastSuggestions = result.suggestions;
+    results.innerHTML = html;
+  } catch(e) {
+    results.innerHTML = `<div style="color:var(--red);">错误: ${esc(e.message)}</div>`;
+  }
+}
+
+function acceptSuggestion(i) {
+  const s = window._lastSuggestions?.[i];
+  if (!s) return;
+  const textarea = document.getElementById('suggestInput');
+  textarea.value = textarea.value.replace(s.original, s.suggestion);
+  analyzeSuggestion();
+}
+
+function dismissSuggestion(i) {
+  const box = document.querySelectorAll('.suggest-box')[i];
+  if (box) box.style.opacity = '0.4';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 6: 版本历史
+// ═══════════════════════════════════════════════════════════
+
+function recordVersion(source, original, adapted, label, changes) {
+  versionCounter++;
+  versionHistory.push({
+    id: `v${versionCounter}-${Date.now().toString(36).slice(-4)}`,
+    timestamp: new Date().toISOString(),
+    source, original, adapted, label, changes,
+  });
+  renderHistoryList();
+}
+
+function renderHistoryList() {
+  const list = document.getElementById('historyList');
+  if (!versionHistory.length) return;
+  list.innerHTML = versionHistory.slice().reverse().map(v => 
+    `<div class="version-entry" onclick="showVersion('${v.id}')"><div class="v-id">${v.id} · ${v.timestamp.slice(11,19)}</div><div class="v-summary">${esc(v.label)} · ${v.changes.length}处变更</div></div>`
+  ).join('');
+}
+
+function showVersion(id) {
+  document.querySelectorAll('.version-entry').forEach(e => e.classList.remove('active'));
+  const v = versionHistory.find(x => x.id === id);
+  if (!v) return;
+  
+  document.getElementById('historyDetail').innerHTML = `
+    <div style="margin-bottom:10px;">
+      <span class="badge b-blue">${esc(v.source)}</span>
+      <span class="badge b-cyan">${esc(v.label)}</span>
+      <span style="font-size:11px;color:var(--dim);margin-left:6px;">${v.timestamp}</span>
+    </div>
+    <div class="seg violation"><div class="seg-id">原始内容</div><div class="seg-txt">${esc(v.original)}</div></div>
+    <div style="text-align:center;font-size:11px;color:var(--dim);margin:6px 0;">↓</div>
+    <div class="seg changed"><div class="seg-id">渲染版本 (${v.id})</div><div class="seg-txt">${esc(v.adapted)}</div>
+    ${v.changes.length?`<div class="seg-diff">${v.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span> (${esc(c.reason)})</div>`).join('')}</div>`:''}
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px;">变更数: ${v.changes.length}</div>
+  `;
+  
+  event?.target?.classList?.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Utils
+// ═══════════════════════════════════════════════════════════
+
+function esc(text) { const d=document.createElement('div'); d.textContent=text??''; return d.innerHTML; }
 
 // ═══════════════════════════════════════════════════════════
 //  Init
 // ═══════════════════════════════════════════════════════════
 
-renderUsers();
+// 默认 Mock 模式
+provider = 'mock';
+apiConnected = true;
+document.getElementById('apiProvider').value = 'mock';
+updateApiStatus();
+renderMuUsers();
 </script>
 
 </body>
