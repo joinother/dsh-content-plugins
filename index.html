@@ -304,7 +304,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
   <div class="tab" data-tab="timeline" onclick="switchTab('timeline')">时间轴<span class="num">3</span></div>
   <div class="tab" data-tab="admin" onclick="switchTab('admin')">管理员面板<span class="num">4</span></div>
   <div class="tab" data-tab="suggest" onclick="switchTab('suggest')">输入时建议<span class="num">5</span></div>
-  <div class="tab" data-tab="history" onclick="switchTab('history')">版本历史<span class="num">6</span></div>
+  <div class="tab" data-tab="gateway" onclick="switchTab('gateway')">策略网关<span class="num">6</span></div>
+  <div class="tab" data-tab="quality" onclick="switchTab('quality')">质量评分<span class="num">7</span></div>
+  <div class="tab" data-tab="abtest" onclick="switchTab('abtest')">A/B对比<span class="num">8</span></div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">版本历史<span class="num">9</span></div>
 </div>
 
 <div class="main">
@@ -466,7 +469,96 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
   </div>
 </div>
 
-<!-- ═══ Tab 6: 版本历史 ═══ -->
+<!-- ═══ Tab 6: 策略网关 (借鉴 Abliteration.ai) ═══ -->
+<div class="tab-content" id="tab-gateway">
+  <div class="banner"><span class="b-ico">🛡️</span><div><strong>策略网关</strong> · 每条内容经五重决策：放行/拒绝/改写/脱敏/人工审核。借鉴 Abliteration.ai 的 policy-as-code 模式。</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📝</span> 输入内容</div>
+        <div class="card-bdy">
+          <div class="field"><textarea id="gwInput" style="min-height:80px;">你这个白痴，写的什么垃圾代码？我手机号13800138000，不信你打给我，咱们当面说。另外听说某公司要倒闭了，快抛售！</textarea></div>
+          <div class="field">
+            <label>策略配置</label>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text)"><input type="checkbox" id="gwRuleAttack" checked> 人身攻击 → 改写</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text)"><input type="checkbox" id="gwRulePII" checked> 隐私信息 → 脱敏</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text)"><input type="checkbox" id="gwRuleFake" checked> 虚假信息 → 人工审核</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text)"><input type="checkbox" id="gwRuleSpam"> 垃圾信息 → 拒绝</label>
+            </div>
+          </div>
+          <button class="btn btn-p" id="gwRunBtn" onclick="runGateway()" style="width:100%">执行策略网关</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">🛡️</span> 网关决策结果</div>
+        <div class="card-bdy" id="gwResults">
+          <div class="empty"><div class="ico">🛡️</div><div>点击"执行策略网关"查看</div><div class="hint">放行/拒绝/改写/脱敏/人工审核</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 7: 质量评分 (借鉴 mod-frontier) ═══ -->
+<div class="tab-content" id="tab-quality">
+  <div class="banner"><span class="b-ico">📊</span><div><strong>质量评分</strong> · 评估改写质量：合规性、意图保留度、信息完整性、流畅度。借鉴 Microsoft mod-frontier 的 usefulness score。</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📝</span> 原文 & 改写版</div>
+        <div class="card-bdy">
+          <div class="field"><label>原文</label><textarea id="qaOriginal" style="min-height:60px;">你这个白痴，写的什么垃圾代码，脑子是不是有问题？回家种地去吧！</textarea></div>
+          <div class="field"><label>改写版（可手动编辑或点"自动改写"）</label><textarea id="qaAdapted" style="min-height:60px;"></textarea></div>
+          <button class="btn btn-s" style="width:100%;margin-bottom:8px" onclick="qaAutoAdapt()">自动改写</button>
+          <button class="btn btn-p" id="qaRunBtn" onclick="runQuality()" style="width:100%">评估质量</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📊</span> 质量评分报告</div>
+        <div class="card-bdy" id="qaResults">
+          <div class="empty"><div class="ico">📊</div><div>输入原文和改写版后点击评估</div><div class="hint">四维评分 + 综合建议</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 8: A/B 对比 (借鉴 PEACH) ═══ -->
+<div class="tab-content" id="tab-abtest">
+  <div class="banner"><span class="b-ico">🧪</span><div><strong>A/B 对比</strong> · 同一内容生成多个版本并排对比，辅助决策最佳适应策略。借鉴 PEACH 的多版本发布模式。</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📝</span> 内容 & 配置</div>
+        <div class="card-bdy">
+          <div class="field"><label>内容</label><textarea id="abInput" style="min-height:70px;">这个产品的设计简直是垃圾，用了三天就坏了，客服还一脸不耐烦，建议大家千万别买！不过外观确实还行，颜色搭配挺好看的。</textarea></div>
+          <div class="field"><label>对比版本数</label>
+            <div class="levels" id="abVersions">
+              <button class="active" data-v="2">2版</button><button data-v="3">3版</button><button data-v="4">4版</button>
+            </div>
+          </div>
+          <div class="field"><label>模拟用户</label><select id="abUser"><option value="casual">普通用户</option><option value="sensitive">敏感用户</option><option value="formal">专业用户</option></select></div>
+          <button class="btn btn-p" id="abRunBtn" onclick="runABTest()" style="width:100%">生成 A/B 版本</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hdr"><span class="ico">🧪</span> A/B 对比结果</div>
+        <div class="card-bdy" id="abResults">
+          <div class="empty"><div class="ico">🧪</div><div>点击生成 A/B 版本</div><div class="hint">同一内容多个改写策略并排对比</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Tab 9: 版本历史 ═══ -->
 <div class="tab-content" id="tab-history">
   <div class="banner"><span class="b-ico">📜</span><div><strong>版本历史</strong> · 所有渲染版本自动记录，可追溯对比</div></div>
   <div class="grid-side">
@@ -968,6 +1060,234 @@ function showVersion(id,el){
 // ═══════════════════════════════════════════════════════════
 
 function esc(text){const d=document.createElement('div');d.textContent=text??'';return d.innerHTML}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 6: 策略网关 (借鉴 Abliteration.ai)
+// ═══════════════════════════════════════════════════════════
+
+async function runGateway(){
+  const content=document.getElementById('gwInput').value;
+  if(!content.trim())return;
+  const btn=document.getElementById('gwRunBtn');btn.disabled=true;btn.textContent='执行中...';
+  const results=document.getElementById('gwResults');
+  results.innerHTML='<div class="loading"><div class="spinner"></div>策略网关分析中...</div>';
+
+  const rules=document.getElementById('adminRules')?.value||'';
+  const vibe=document.getElementById('adminVibe')?.value||'';
+  const ruleAttack=document.getElementById('gwRuleAttack').checked;
+  const rulePII=document.getElementById('gwRulePII').checked;
+  const ruleFake=document.getElementById('gwRuleFake').checked;
+  const ruleSpam=document.getElementById('gwRuleSpam').checked;
+
+  try{
+    const analysis=await callLLMJSON([
+      {role:'system',content:`你是内容策略网关。分析内容并对每个维度做出决策。\n\n检测维度：\n1. 攻击性内容(人身攻击/谩骂)\n2. 隐私信息(手机号/身份证/地址)\n3. 虚假信息(未经证实的断言/内幕消息)\n4. 垃圾信息(广告/重复/无意义)\n\n返回JSON: {"issues":[{"type":"attack/pii/fake/spam","severity":"low/medium/high","snippet":"相关片段","detail":"说明"}],"overallAction":"allow/refuse/rewrite/redact/escalate","finalContent":"处理后的内容(如果需要改写或脱敏)","actionReason":"决策说明"}\n只输出JSON。`},
+      {role:'user',content:`内容：${content}\n\n平台规则：${rules}`}
+    ],{temperature:0.1,maxTokens:8192});
+
+    // Apply policy rules
+    const actions=[];
+    let finalContent=content;
+
+    for(const issue of analysis.issues||[]){
+      if(issue.type==='attack'&&ruleAttack){
+        actions.push({issue,action:'rewrite',detail:'攻击性内容 → 自动改写'});
+      }else if(issue.type==='pii'&&rulePII){
+        actions.push({issue,action:'redact',detail:'隐私信息 → 脱敏处理'});
+      }else if(issue.type==='fake'&&ruleFake){
+        actions.push({issue,action:'escalate',detail:'虚假信息 → 转人工审核'});
+      }else if(issue.type==='spam'&&ruleSpam){
+        actions.push({issue,action:'refuse',detail:'垃圾信息 → 拒绝发布'});
+      }else{
+        actions.push({issue,action:'allow',detail:'未匹配规则 → 放行'});
+      }
+    }
+
+    // Use finalContent from API if available, else use original
+    if(analysis.finalContent&&analysis.finalContent.trim())finalContent=analysis.finalContent;
+
+    // Render
+    const actionColors={allow:'b-green',refuse:'b-red',rewrite:'b-orange',redact:'b-purple',escalate:'b-cyan'};
+    const actionLabels={allow:'放行',refuse:'拒绝',rewrite:'改写',redact:'脱敏',escalate:'人工审核'};
+
+    let html='<div style="margin-bottom:12px">';
+    // Overall action
+    const overallAction=actions.some(a=>a.action==='refuse')?'refuse':
+      actions.some(a=>a.action==='escalate')?'escalate':
+      actions.some(a=>a.action==='rewrite'||a.action==='redact')?actions.find(a=>a.action==='rewrite'||a.action==='redact').action:'allow';
+    html+=`<div style="text-align:center;padding:12px;background:var(--bg2);border-radius:var(--r-s);margin-bottom:12px">`;
+    html+=`<div style="font-size:24px;margin-bottom:4px">${overallAction==='allow'?'✅':overallAction==='refuse'?'❌':overallAction==='rewrite'?'✏️':overallAction==='redact'?'🔒':'👀'}</div>`;
+    html+=`<span class="badge ${actionColors[overallAction]}" style="font-size:14px;padding:4px 12px">${actionLabels[overallAction]}</span>`;
+    html+=`<div style="font-size:11px;color:var(--dim);margin-top:4px">${esc(analysis.actionReason||'')}</div></div>`;
+
+    // Per-issue actions
+    if(actions.length){
+      html+='<div style="font-size:12px;color:var(--dim);margin-bottom:6px">逐条决策：</div>';
+      actions.forEach(({issue,action,detail})=>{
+        html+=`<div class="seg ${action==='refuse'?'violation':action==='allow'?'ok':'changed'}">`;
+        html+=`<div class="seg-id"><span class="badge ${actionColors[action]}">${actionLabels[action]}</span> ${esc(issue.type)} [${esc(issue.severity)}]</div>`;
+        html+=`<div class="seg-txt" style="font-size:12px">"${esc(issue.snippet)}"</div>`;
+        html+=`<div class="diff-line">${esc(detail)} — ${esc(issue.detail||'')}</div></div>`;
+      });
+    }
+
+    // Final content
+    if(finalContent!==content){
+      html+=`<div style="margin-top:8px"><div class="seg changed"><div class="seg-id">处理后的内容</div><div class="seg-txt">${esc(finalContent)}</div></div></div>`;
+    }
+
+    html+='</div>';
+    results.innerHTML=html;
+    recordVersion('策略网关',content,finalContent,`网关:${actionLabels[overallAction]}`,[]);
+  }catch(e){
+    results.innerHTML=`<div style="color:var(--red)">错误: ${esc(e.message)}</div>`;
+  }
+  btn.disabled=false;btn.textContent='执行策略网关';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 7: 质量评分 (借鉴 mod-frontier)
+// ═══════════════════════════════════════════════════════════
+
+async function qaAutoAdapt(){
+  const original=document.getElementById('qaOriginal').value;
+  if(!original.trim())return;
+  const rules=document.getElementById('adminRules')?.value||'';
+  const vibe=document.getElementById('adminVibe')?.value||'';
+  try{
+    const result=await callLLMJSON([
+      {role:'system',content:`你是内容改写助手。将违规内容改写为合规版本。必须改写，不能原样返回。保留核心意图。\n规则：${rules}\n氛围：${vibe}\n返回JSON: {"content":"改写后的完整内容","changes":[],"adaptationReason":""}\n只输出JSON。`},
+      {role:'user',content:`原文：${original}`}
+    ],{temperature:0.4,maxTokens:8192});
+    document.getElementById('qaAdapted').value=result.content||original;
+    showToast('自动改写完成','success');
+  }catch(e){showToast('改写失败: '+e.message,'error')}
+}
+
+async function runQuality(){
+  const original=document.getElementById('qaOriginal').value;
+  const adapted=document.getElementById('qaAdapted').value;
+  if(!original.trim()||!adapted.trim()){showToast('请输入原文和改写版','error');return}
+  const btn=document.getElementById('qaRunBtn');btn.disabled=true;btn.textContent='评估中...';
+  const results=document.getElementById('qaResults');
+  results.innerHTML='<div class="loading"><div class="spinner"></div>评估改写质量中...</div>';
+
+  try{
+    const scores=await callLLMJSON([
+      {role:'system',content:`你是改写质量评估器。对比原文和改写版，从四个维度评分(0-100)并给出说明。\n\n维度：\n1. compliance: 合规性(是否移除了违规内容)\n2. intentPreservation: 意图保留度(是否保留了原文核心观点)\n3. completeness: 信息完整性(是否丢失了重要信息)\n4. fluency: 流畅度(语言是否通顺自然)\n\n返回JSON: {"scores":{"compliance":0,"intentPreservation":0,"completeness":0,"fluency":0},"overall":0,"analysis":"综合分析","recommendation":"改进建议","issues":["问题1","问题2"]}\n只输出JSON。`},
+      {role:'user',content:`原文：${original}\n\n改写版：${adapted}`}
+    ],{temperature:0.2,maxTokens:8192});
+
+    const dims=[
+      {key:'compliance',label:'合规性',color:'var(--green)'},
+      {key:'intentPreservation',label:'意图保留',color:'var(--accent)'},
+      {key:'completeness',label:'信息完整性',color:'var(--orange)'},
+      {key:'fluency',label:'流畅度',color:'var(--cyan)'},
+    ];
+
+    let html='<div style="margin-bottom:12px">';
+    // Overall score
+    const overall=scores.overall||0;
+    const overallColor=overall>=80?'var(--green)':overall>=60?'var(--orange)':'var(--red)';
+    html+=`<div style="text-align:center;padding:16px;background:var(--bg2);border-radius:var(--r-s);margin-bottom:12px">`;
+    html+=`<div style="font-size:36px;font-weight:700;color:${overallColor}">${overall}</div>`;
+    html+=`<div style="font-size:12px;color:var(--dim)">综合评分</div></div>`;
+
+    // Dimension bars
+    dims.forEach(d=>{
+      const val=scores.scores?.[d.key]||0;
+      html+=`<div style="margin-bottom:8px">`;
+      html+=`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${d.label}</span><span style="font-weight:600;color:${d.color}">${val}/100</span></div>`;
+      html+=`<div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${val}%;background:${d.color};border-radius:3px;transition:width .6s var(--transition)"></div></div>`;
+      html+=`</div>`;
+    });
+
+    // Analysis
+    html+=`<div class="seg ok" style="margin-top:10px"><div class="seg-id">综合分析</div><div class="seg-txt">${esc(scores.analysis||'')}</div></div>`;
+
+    // Issues
+    if(scores.issues?.length){
+      html+='<div style="margin-top:8px"><div style="font-size:12px;color:var(--dim);margin-bottom:4px">问题：</div>';
+      scores.issues.forEach(iss=>{html+=`<div class="diff-line">• ${esc(iss)}</div>`});
+      html+='</div>';
+    }
+
+    // Recommendation
+    html+=`<div class="seg changed" style="margin-top:8px"><div class="seg-id">改进建议</div><div class="seg-txt">${esc(scores.recommendation||'')}</div></div>`;
+
+    html+='</div>';
+    results.innerHTML=html;
+  }catch(e){
+    results.innerHTML=`<div style="color:var(--red)">错误: ${esc(e.message)}</div>`;
+  }
+  btn.disabled=false;btn.textContent='评估质量';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab 8: A/B 对比 (借鉴 PEACH)
+// ═══════════════════════════════════════════════════════════
+
+let abVersionCount=2;
+
+document.getElementById('abVersions')?.addEventListener('click',e=>{
+  if(e.target.dataset.v){
+    abVersionCount=parseInt(e.target.dataset.v);
+    document.querySelectorAll('#abVersions button').forEach(b=>b.classList.toggle('active',b.dataset.v==abVersionCount));
+  }
+});
+
+async function runABTest(){
+  const content=document.getElementById('abInput').value;
+  if(!content.trim())return;
+  const btn=document.getElementById('abRunBtn');btn.disabled=true;btn.textContent='生成中...';
+  const results=document.getElementById('abResults');
+  results.innerHTML=`<div class="loading"><div class="spinner"></div>生成 ${abVersionCount} 个 A/B 版本中...</div>`;
+
+  const rules=document.getElementById('adminRules')?.value||'';
+  const vibe=document.getElementById('adminVibe')?.value||'';
+  const userType=document.getElementById('abUser').value;
+  const userMap={
+    casual:{name:'普通用户',tone:'casual',detail:'normal',customPrompt:'普通浏览',time:'morning',excludeSentiments:[]},
+    sensitive:{name:'敏感用户',tone:'casual',detail:'brief',customPrompt:'不想看负能量',time:'night',excludeSentiments:['negative']},
+    formal:{name:'专业用户',tone:'formal',detail:'detailed',customPrompt:'需要专业信息',time:'morning',excludeSentiments:[]},
+  };
+  const user=userMap[userType];
+
+  // Generate multiple versions with different temperature/level
+  const variants=[
+    {label:'A: 轻度改写',level:'light',temp:0.3},
+    {label:'B: 中度改写',level:'moderate',temp:0.5},
+    {label:'C: 积极改写',level:'aggressive',temp:0.7},
+    {label:'D: 深度重构',level:'aggressive',temp:0.9},
+  ].slice(0,abVersionCount);
+
+  const versions=[];
+  for(const v of variants){
+    try{
+      const result=await adaptForUser(content,user,rules,vibe,v.level);
+      versions.push({...v,content:result.content,changes:result.changes||[],reason:result.adaptationReason||''});
+    }catch(e){
+      versions.push({...v,content:'生成失败: '+e.message,changes:[],reason:''});
+    }
+  }
+
+  // Render side by side
+  let html='<div class="grid-3" style="grid-template-columns:repeat('+Math.min(abVersionCount,4)+',1fr)">';
+  versions.forEach((v,i)=>{
+    const changed=v.content!==content;
+    html+=`<div class="rc"><div class="rc-hdr"><span class="rc-name">${v.label}</span><span class="rc-meta">temp:${v.temp}</span></div><div class="rc-bdy"><div class="seg ${changed?'changed':'ok'}"><div class="seg-id">${changed?'已改写':'原样保留'} · ${v.changes.length}处变更</div><div class="seg-txt">${esc(v.content)}</div>${v.changes.length?`<div class="seg-diff">${v.changes.map(c=>`<div class="diff-line"><span class="del">${esc(c.before)}</span> → <span class="add">${esc(c.after)}</span></div>`).join('')}</div>`:''}${v.reason?`<div class="diff-line">原因: ${esc(v.reason)}</div>`:''}</div></div><div class="rc-ftr"><span>版本 ${String.fromCharCode(65+i)}</span><span>${v.changes.length} 处变更</span></div></div>`;
+    recordVersion('A/B对比',content,v.content,`${v.label}·${user.name}`,v.changes);
+  });
+  html+='</div>';
+
+  // Comparison summary
+  html+='<div class="seg ok" style="margin-top:12px"><div class="seg-id">对比分析</div><div class="seg-txt" style="font-size:12px">';
+  html+=versions.map((v,i)=>`版本${String.fromCharCode(65+i)}: ${v.content.length}字, ${v.changes.length}处变更`).join(' | ');
+  html+='</div></div>';
+
+  results.innerHTML=html;
+  btn.disabled=false;btn.textContent='生成 A/B 版本';
+}
 
 // ═══════════════════════════════════════════════════════════
 //  Init
