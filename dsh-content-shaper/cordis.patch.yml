@@ -1,0 +1,21 @@
+- insert:
+  - id: content-shaper
+    name: './src/index.ts'
+    config:
+      apiKey: ''
+      apiBase: 'https://api.deepseek.com/v1/chat/completions'
+      model: 'deepseek-chat'
+      platformRules: |
+        平台内容规则：
+        1. 禁止人身攻击、侮辱、谩骂
+        2. 禁止虚假信息和恶意造谣
+        3. 禁止泄露他人隐私
+        4. 禁止煽动仇恨和歧视
+        5. 禁止低俗色情内容
+        6. 鼓励理性、建设性的讨论
+      communityVibe: |
+        社区氛围设定：
+        - 友善、包容、理性
+        - 鼓励多元观点但反对恶意攻击
+        - 对新手友好，乐于解答
+        - 讨论以事实为依据

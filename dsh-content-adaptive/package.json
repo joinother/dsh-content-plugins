@@ -1,0 +1,30 @@
+{
+  "name": "dsh-content-adaptive",
+  "version": "0.1.0",
+  "description": "Multi-modal content adaptation engine: text/image/audio/video segments dynamically adapted per user, per time, per context",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "demo:text": "node demo/demo-text.mjs",
+    "demo:image": "node demo/demo-image.mjs",
+    "demo:dynamic": "node demo/demo-dynamic.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^0.1.0",
+    "@deepseek-ai/dsh-tools": "^0.1.0"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "content-adaptation",
+    "multi-modal",
+    "dynamic-content",
+    "ai"
+  ],
+  "license": "MIT"
+}

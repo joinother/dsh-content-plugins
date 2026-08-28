@@ -1,0 +1,9 @@
+id: content-shaper
+name: Content Shaper
+description: AI 内容审核、改写与读者侧过滤原型机
+author: open-source
+tags:
+  - content-moderation
+  - content-rewrite
+  - reader-filter
+  - ai

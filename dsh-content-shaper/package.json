@@ -1,0 +1,29 @@
+{
+  "name": "dsh-content-shaper",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness plugin: AI-driven content moderation, rewriting, and reader-side filtering prototype",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "demo": "node demo/demo.mjs",
+    "demo:filter": "node demo/demo-filter.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^0.1.0",
+    "@deepseek-ai/dsh-tools": "^0.1.0"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "content-moderation",
+    "content-rewrite",
+    "reader-filter",
+    "ai"
+  ],
+  "license": "MIT"
+}
