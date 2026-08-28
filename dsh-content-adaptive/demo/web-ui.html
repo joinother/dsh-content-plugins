@@ -291,6 +291,56 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .feed-original-toggle:hover{color:var(--accent)}
 .feed-original{display:none;margin-top:6px;padding:8px;background:var(--bg2);border-radius:var(--r-s);font-size:12px;color:var(--dim)}
 
+/* ─── Console (全景控制台) ─── */
+.tab-console{background:linear-gradient(135deg,var(--accent-glow),var(--purple-glow))!important;border-radius:var(--r-s) var(--r-s) 0 0!important}
+.tab-console.active{background:linear-gradient(135deg,var(--accent),var(--purple))!important;color:#fff!important}
+.console-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;text-align:center;transition:all .3s var(--transition);animation:cardIn .4s var(--transition)}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.stat-val{font-size:28px;font-weight:700;margin-bottom:2px}
+.stat-label{font-size:11px;color:var(--dim)}
+.flow-diagram{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;margin-bottom:14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r);flex-wrap:wrap}
+.flow-node{padding:8px 14px;border-radius:var(--r-s);font-size:12px;font-weight:600;text-align:center;min-width:70px;transition:all .3s var(--transition)}
+.flow-node.admin{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(124,140,240,.3)}
+.flow-node.user{background:var(--purple-glow);color:var(--purple);border:1px solid rgba(192,132,252,.3)}
+.flow-node.system{background:var(--cyan-glow);color:var(--cyan);border:1px solid rgba(56,189,248,.3)}
+.flow-node:hover{transform:scale(1.05)}
+.flow-arrow{color:var(--dim2);font-size:14px;animation:flowPulse 2s ease-in-out infinite}
+@keyframes flowPulse{0%,100%{opacity:.3;transform:translateX(0)}50%{opacity:1;transform:translateX(3px)}}
+.review-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-s);padding:10px 12px;margin-bottom:8px;transition:all .3s var(--transition);animation:slideIn .3s var(--transition)}
+.review-item:hover{border-color:var(--border2)}
+.review-item.pending{border-left:3px solid var(--orange)}
+.review-item.approved{border-left:3px solid var(--green)}
+.review-item.rejected{border-left:3px solid var(--red)}
+.review-item.rewritten{border-left:3px solid var(--accent)}
+.review-meta{font-size:11px;color:var(--dim);margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.review-content{font-size:13px;margin-bottom:6px;white-space:pre-wrap;word-break:break-word}
+.review-actions{display:flex;gap:6px;flex-wrap:wrap}
+.review-actions .btn{font-size:11px;padding:4px 10px}
+.post-composer{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px}
+.post-composer textarea{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-s);color:var(--text);padding:10px;font-size:13px;resize:vertical;min-height:60px;font-family:inherit;transition:all .3s var(--transition)}
+.post-composer textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.feedback-bar{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap}
+.feedback-btn{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--dim);transition:all .3s var(--transition)}
+.feedback-btn:hover{color:var(--text);border-color:var(--border2)}
+.feedback-btn.active{background:var(--accent-glow);color:var(--accent);border-color:var(--accent)}
+.prefs-report{background:var(--bg2);border-radius:var(--r-s);padding:8px 10px;margin-bottom:6px;font-size:12px;transition:all .3s var(--transition)}
+.prefs-report:hover{background:var(--panel3)}
+.prefs-report .pr-user{font-weight:600;display:flex;align-items:center;gap:6px}
+.prefs-report .pr-prefs{color:var(--dim);font-size:11px;margin-top:3px}
+.rule-notice{background:var(--orange-glow);border:1px solid rgba(251,191,82,.3);border-radius:var(--r-s);padding:8px 12px;margin-bottom:8px;font-size:12px;animation:slideIn .3s var(--transition);display:flex;align-items:center;gap:6px}
+.rule-notice .rn-time{margin-left:auto;font-size:10px;color:var(--dim)}
+.feed-post-btn{margin-bottom:12px}
+.feed-notification{background:var(--accent-glow);border:1px solid rgba(124,140,240,.3);border-radius:var(--r-s);padding:8px 12px;margin-bottom:12px;font-size:12px;animation:slideIn .3s var(--transition);display:flex;align-items:center;gap:8px}
+.feed-notification .fn-dismiss{margin-left:auto;cursor:pointer;color:var(--dim);font-size:16px;line-height:1}
+.feed-notification .fn-dismiss:hover{color:var(--text)}
+@media(max-width:768px){
+  .console-stats{grid-template-columns:repeat(2,1fr)}
+  .flow-diagram{gap:4px;padding:10px}
+  .flow-node{padding:6px 8px;font-size:11px;min-width:60px}
+  .flow-arrow{font-size:12px}
+}
+
 </style>
 </head>
 <body>
@@ -328,6 +378,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
   <div class="tab" data-tab="quality" onclick="switchTab('quality')">质量评分<span class="num">7</span></div>
   <div class="tab" data-tab="abtest" onclick="switchTab('abtest')">A/B对比<span class="num">8</span></div>
   <div class="tab" data-tab="history" onclick="switchTab('history')">版本历史<span class="num">9</span></div>
+  <div class="tab tab-console" data-tab="console" onclick="switchTab('console')">全景控制台<span class="num">C</span></div>
   <div class="tab-sep"></div>
   <div class="tab tab-user" data-tab="userhome" onclick="switchTab('userhome')">用户主页<span class="num">U</span></div>
   <div class="tab tab-user" data-tab="userfeed" onclick="switchTab('userfeed')">我的信息流<span class="num">F</span></div>
@@ -605,6 +656,94 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
   </div>
 </div>
 
+<!-- ═══ Tab C: 全景控制台 (管理端 ↔ 用户端 串联) ═══ -->
+<div class="tab-content" id="tab-console">
+  <div class="banner"><span class="b-ico">🔗</span><div><strong>全景控制台</strong> · 管理端与用户端数据互通：发帖→审核→全员信息流，规则变更实时同步，用户反馈上报管理端</div></div>
+
+  <!-- Stats overview -->
+  <div class="console-stats" id="consoleStats"></div>
+
+  <!-- Data flow diagram -->
+  <div class="flow-diagram">
+    <div class="flow-node user">用户发帖</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node system">审核队列</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node admin">管理员审核</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node system">发布</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node user">全员信息流</div>
+    <span class="flow-arrow">↔</span>
+    <div class="flow-node admin">反馈上报</div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Left: Admin workspace -->
+    <div>
+      <!-- Pending review queue -->
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📋</span> 待审核帖子队列 <span id="pendingCount" style="margin-left:auto;font-size:11px;color:var(--orange)"></span></div>
+        <div class="card-bdy" id="reviewQueue">
+          <div class="empty"><div class="ico">📋</div><div>暂无待审核帖子</div><div class="hint">用户发帖后将出现在这里</div></div>
+        </div>
+      </div>
+
+      <!-- User preferences report -->
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📊</span> 用户偏好上报 <span id="userReportCount" style="margin-left:auto;font-size:11px;color:var(--dim)"></span></div>
+        <div class="card-bdy" id="userPrefsReport">
+          <div class="empty"><div class="ico">📊</div><div>暂无用户数据</div><div class="hint">用户设置偏好后将显示在这里</div></div>
+        </div>
+      </div>
+
+      <!-- Rule change history -->
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📜</span> 规则变更记录</div>
+        <div class="card-bdy" id="ruleChangeHistory">
+          <div class="empty"><div class="ico">📜</div><div>暂无规则变更</div><div class="hint">管理员修改规则后将记录在这里</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: User workspace -->
+    <div>
+      <!-- Post composer -->
+      <div class="card">
+        <div class="card-hdr"><span class="ico">✏️</span> 发布新帖子 <span id="composerUser" style="margin-left:auto;font-size:11px;color:var(--dim)"></span></div>
+        <div class="card-bdy">
+          <div class="post-composer">
+            <textarea id="consolePostInput" placeholder="写下你想说的内容...（提交后将进入管理员审核队列）" style="min-height:70px"></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+              <button class="btn btn-p btn-sm" onclick="submitUserPost()" style="flex:1">提交审核</button>
+              <span id="postStatus" style="font-size:11px;color:var(--dim)"></span>
+            </div>
+          </div>
+          <div id="consoleLoggedOutNotice" style="display:none;padding:12px;text-align:center;color:var(--dim);font-size:12px">
+            请先在「用户主页」登录后再发帖
+          </div>
+        </div>
+      </div>
+
+      <!-- Published feed (all approved posts) -->
+      <div class="card">
+        <div class="card-hdr"><span class="ico">📰</span> 已发布内容流 <span id="publishedCount" style="margin-left:auto;font-size:11px;color:var(--green)"></span></div>
+        <div class="card-bdy" id="publishedFeed">
+          <div class="empty"><div class="ico">📰</div><div>暂无已发布内容</div><div class="hint">审核通过的帖子将显示在这里</div></div>
+        </div>
+      </div>
+
+      <!-- Feedback summary -->
+      <div class="card">
+        <div class="card-hdr"><span class="ico">💬</span> 用户反馈汇总</div>
+        <div class="card-bdy" id="feedbackSummary">
+          <div class="empty"><div class="ico">💬</div><div>暂无反馈</div><div class="hint">用户在信息流中点赞/点踩后将汇总在这里</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ Tab U: 用户主页 (登录/注册 + Passkey) ═══ -->
 <div class="tab-content" id="tab-userhome">
   <div class="banner"><span class="b-ico">👤</span><div><strong>用户主页</strong> · 注册/登录体验，支持 Passkey 通行密钥无密码登录</div></div>
@@ -673,10 +812,21 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
     <button class="btn btn-p" onclick="switchTab('userhome')">去登录</button>
   </div>
   <div id="feedContent" style="display:none">
+    <div id="feedNotifications"></div>
     <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-p" id="feedRefreshBtn" onclick="loadFeed()">刷新信息流</button>
       <button class="btn btn-s" onclick="switchTab('userprefs')">调整偏好</button>
+      <button class="btn btn-s" onclick="togglePostComposer()">发帖</button>
       <span id="feedUserInfo" style="font-size:12px;color:var(--dim);margin-left:auto"></span>
+    </div>
+    <div id="feedPostComposer" style="display:none;margin-bottom:12px">
+      <div class="post-composer">
+        <textarea id="feedPostInput" placeholder="写下你想说的内容...（提交后进入审核队列）" style="min-height:60px"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <button class="btn btn-p btn-sm" onclick="submitUserPostFromFeed()" style="flex:1">提交审核</button>
+          <span id="feedPostStatus" style="font-size:11px;color:var(--dim)"></span>
+        </div>
+      </div>
     </div>
     <div id="feedList"></div>
   </div>
@@ -919,6 +1069,8 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
+  if(name==='console')refreshConsole();
+  if(name==='userfeed')checkFeedNotifications();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1390,6 +1542,7 @@ function updateAuthUI(){
     document.getElementById('prefsContent').style.display='block';
     document.getElementById('feedUserInfo').textContent=`@${currentUser.username} · 偏好已加载`;
     loadPrefsToUI();
+    updateComposerUI();
   }else{
     loggedOut.style.display='block';
     loggedIn.style.display='none';
@@ -1397,6 +1550,7 @@ function updateAuthUI(){
     document.getElementById('feedContent').style.display='none';
     document.getElementById('prefsLoggedOutNotice').style.display='block';
     document.getElementById('prefsContent').style.display='none';
+    updateComposerUI();
   }
 }
 
@@ -1444,6 +1598,7 @@ function savePrefs(){
   saved.style.display='block';
   setTimeout(()=>saved.style.display='none',2000);
   showToast('偏好已保存','success');
+  renderUserPrefsReport();
 }
 
 function updatePrefPreview(){
@@ -1486,21 +1641,38 @@ async function loadFeed(){
   const feedList=document.getElementById('feedList');
   feedList.innerHTML='<div class="loading"><div class="spinner"></div>正在为你适配内容...</div>';
 
+  loadSharedStore();
   const data=userStore[currentUser.username];
   const prefs=data?.prefs||defaultPrefs();
   const rules=document.getElementById('adminRules')?.value||'';
   const vibe=document.getElementById('adminVibe')?.value||'';
 
+  // Build combined feed: published posts from shared store + mock feed
+  const publishedPosts=sharedStore.posts
+    .filter(p=>p.status==='approved'||p.status==='rewritten')
+    .map(p=>({
+      id:p.id,
+      author:p.display,
+      avatar:avatarColor(p.author),
+      time:'刚刚',
+      content:p.status==='rewritten'&&p.reviewedContent?p.reviewedContent:p.content,
+      originalContent:p.content,
+      isRewritten:p.status==='rewritten',
+      isUserPost:true,
+      postId:p.id,
+    }));
+  const allItems=[...publishedPosts,...MOCK_FEED.map(m=>({...m,isUserPost:false}))];
+
   // If adaptation is off, show raw content
   if(prefs.level==='off'){
-    feedList.innerHTML=MOCK_FEED.map(item=>renderFeedItem(item,item.content,false)).join('');
+    feedList.innerHTML=allItems.map(item=>renderFeedItem(item,item.content,false)).join('');
     btn.disabled=false;btn.textContent='刷新信息流';
     return;
   }
 
   // Adapt each item
   const adapted=[];
-  for(const item of MOCK_FEED){
+  for(const item of allItems){
     try{
       const userObj={
         name:currentUser.display,
@@ -1529,21 +1701,33 @@ async function loadFeed(){
 
 function renderFeedItem(item,content,adapted,changes){
   const adaptTag=adapted?'<span class="feed-adapted-tag">已适配</span>':'';
+  const rewriteTag=item.isRewritten?'<span class="badge b-blue" style="font-size:9px;margin-left:4px">AI改写</span>':'';
   const originalSection=adapted?`<div class="feed-original-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">查看原文</div><div class="feed-original">${esc(item.content)}</div>`:'';
   const changeCount=changes?.length||0;
+  let footer;
+  if(item.isUserPost&&item.postId){
+    const likes=sharedStore.feedback.filter(f=>f.postId===item.postId&&f.type==='like').length;
+    const dislikes=sharedStore.feedback.filter(f=>f.postId===item.postId&&f.type==='dislike').length;
+    const userFeedback=currentUser?sharedStore.feedback.find(f=>f.postId===item.postId&&f.user===currentUser.username):null;
+    footer=`<div class="feedback-bar">
+      <button class="feedback-btn ${userFeedback?.type==='like'?'active':''}" data-pid="${item.postId}" data-type="like" onclick="submitFeedback('${item.postId}','like')">👍 ${likes||''}</button>
+      <button class="feedback-btn ${userFeedback?.type==='dislike'?'active':''}" data-pid="${item.postId}" data-type="dislike" onclick="submitFeedback('${item.postId}','dislike')">👎 ${dislikes||''}</button>
+      <button class="feedback-btn" onclick="reportPost('${item.postId}')">举报</button>
+    </div>`;
+  }else{
+    footer=`<div class="feed-item-ftr"><span>👍 赞</span><span>💬 评论</span><span>↗ 分享</span></div>`;
+  }
   return `<div class="feed-item">
     <div class="feed-item-hdr">
       <div class="feed-avatar" style="background:${item.avatar}">${avatarInitial(item.author)}</div>
-      <div><div style="font-size:13px;font-weight:600">${esc(item.author)}</div><div class="feed-meta">${esc(item.time)}${changeCount?` · ${changeCount}处适配`:''}</div></div>
+      <div><div style="font-size:13px;font-weight:600">${esc(item.author)}${rewriteTag}</div><div class="feed-meta">${esc(item.time)}${changeCount?` · ${changeCount}处适配`:''}</div></div>
     </div>
     <div class="feed-item-bdy">
       ${adaptTag}
       ${esc(content)}
       ${originalSection}
     </div>
-    <div class="feed-item-ftr">
-      <span>👍 赞</span><span>💬 评论</span><span>↗ 分享</span>
-    </div>
+    ${footer}
   </div>`;
 }
 
@@ -1776,6 +1960,399 @@ async function runABTest(){
 }
 
 // ═══════════════════════════════════════════════════════════
+//  Tab C: 全景控制台 — 管理端 ↔ 用户端 串联
+// ═══════════════════════════════════════════════════════════
+
+// ── Shared data layer (localStorage) ──
+let sharedStore={posts:[],feedback:[],ruleChanges:[],ruleVersion:0,dismissedNotifications:[]};
+
+function loadSharedStore(){
+  try{sharedStore=JSON.parse(localStorage.getItem('cae_shared')||'{}')}catch{sharedStore={}}
+  if(!sharedStore.posts)sharedStore.posts=[];
+  if(!sharedStore.feedback)sharedStore.feedback=[];
+  if(!sharedStore.ruleChanges)sharedStore.ruleChanges=[];
+  if(!sharedStore.ruleVersion)sharedStore.ruleVersion=0;
+  if(!sharedStore.dismissedNotifications)sharedStore.dismissedNotifications=[];
+}
+function saveSharedStore(){localStorage.setItem('cae_shared',JSON.stringify(sharedStore))}
+
+// ── Post submission (from console) ──
+function submitUserPost(){
+  if(!currentUser){showToast('请先在用户主页登录','error');return}
+  const input=document.getElementById('consolePostInput');
+  const content=input.value.trim();
+  if(!content){showToast('请输入内容','error');return}
+  const post={
+    id:'p'+Date.now(),
+    author:currentUser.username,
+    display:currentUser.display||currentUser.username,
+    content,
+    status:'pending',
+    submittedAt:new Date().toISOString(),
+    reviewedAt:null,
+    reviewedContent:null,
+    reviewNote:'',
+  };
+  sharedStore.posts.unshift(post);
+  saveSharedStore();
+  input.value='';
+  document.getElementById('postStatus').textContent='已提交审核，等待管理员处理';
+  setTimeout(()=>{const el=document.getElementById('postStatus');if(el)el.textContent=''},3000);
+  showToast('帖子已提交审核','success');
+  refreshConsole();
+}
+
+// ── Post submission (from user feed) ──
+function submitUserPostFromFeed(){
+  if(!currentUser){showToast('请先登录','error');return}
+  const input=document.getElementById('feedPostInput');
+  const content=input.value.trim();
+  if(!content){showToast('请输入内容','error');return}
+  const post={
+    id:'p'+Date.now(),
+    author:currentUser.username,
+    display:currentUser.display||currentUser.username,
+    content,
+    status:'pending',
+    submittedAt:new Date().toISOString(),
+    reviewedAt:null,
+    reviewedContent:null,
+    reviewNote:'',
+  };
+  sharedStore.posts.unshift(post);
+  saveSharedStore();
+  input.value='';
+  document.getElementById('feedPostComposer').style.display='none';
+  document.getElementById('feedPostStatus').textContent='已提交审核';
+  setTimeout(()=>{const el=document.getElementById('feedPostStatus');if(el)el.textContent=''},3000);
+  showToast('帖子已提交，等待管理员审核','success');
+}
+
+// ── Toggle post composer in feed ──
+function togglePostComposer(){
+  const el=document.getElementById('feedPostComposer');
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block')document.getElementById('feedPostInput')?.focus();
+}
+
+// ── Admin review actions ──
+async function reviewPost(postId,action){
+  const post=sharedStore.posts.find(p=>p.id===postId);
+  if(!post)return;
+  if(action==='approve'){
+    post.status='approved';
+    post.reviewedAt=new Date().toISOString();
+    saveSharedStore();
+    showToast('已批准发布','success');
+    refreshConsole();
+  }else if(action==='reject'){
+    post.status='rejected';
+    post.reviewedAt=new Date().toISOString();
+    post.reviewNote='管理员拒绝发布';
+    saveSharedStore();
+    showToast('已拒绝','info');
+    refreshConsole();
+  }else if(action==='rewrite'){
+    // Auto-rewrite using LLM
+    const rules=document.getElementById('adminRules')?.value||'';
+    const vibe=document.getElementById('adminVibe')?.value||'';
+    showToast('正在AI改写...','info');
+    try{
+      const result=await callLLMJSON([
+        {role:'system',content:`你是内容改写助手。将内容改写为合规版本，保留核心意图。\n规则：${rules}\n氛围：${vibe}\n返回JSON: {"content":"改写后的完整内容","changes":[]}\n只输出JSON。`},
+        {role:'user',content:`原文：${post.content}`}
+      ],{temperature:0.4,maxTokens:8192});
+      post.status='rewritten';
+      post.reviewedContent=result.content||post.content;
+      post.changes=result.changes||[];
+      post.reviewedAt=new Date().toISOString();
+      post.reviewNote='AI改写后发布';
+      saveSharedStore();
+      showToast('改写完成并发布','success');
+      refreshConsole();
+    }catch(e){
+      post.status='approved';
+      post.reviewedAt=new Date().toISOString();
+      post.reviewNote='改写失败，原样发布';
+      saveSharedStore();
+      showToast('改写失败，原样发布','error');
+      refreshConsole();
+    }
+  }
+}
+
+// ── User feedback on feed items ──
+function submitFeedback(postId,type){
+  if(!currentUser){showToast('请先登录','error');return}
+  // Remove existing feedback from this user on this post
+  sharedStore.feedback=sharedStore.feedback.filter(f=>!(f.postId===postId&&f.user===currentUser.username));
+  sharedStore.feedback.push({postId,user:currentUser.username,display:currentUser.display,type,time:new Date().toISOString()});
+  saveSharedStore();
+  // Update UI
+  document.querySelectorAll(`.feedback-btn[data-pid="${postId}"]`).forEach(b=>b.classList.remove('active'));
+  const btn=document.querySelector(`.feedback-btn[data-pid="${postId}"][data-type="${type}"]`);
+  if(btn)btn.classList.add('active');
+  showToast(type==='like'?'已点赞':'已反馈','success');
+  refreshConsole();
+}
+
+// ── Admin rule change tracking ──
+let lastRules='',lastVibe='';
+function trackRuleChange(){
+  const rules=document.getElementById('adminRules')?.value||'';
+  const vibe=document.getElementById('adminVibe')?.value||'';
+  if(rules!==lastRules||vibe!==lastVibe){
+    lastRules=rules;lastVibe=vibe;
+    sharedStore.ruleVersion++;
+    const change={
+      version:sharedStore.ruleVersion,
+      time:new Date().toISOString(),
+      rulesSummary:rules.slice(0,60)+'...',
+      vibeSummary:vibe.slice(0,60)+'...',
+    };
+    sharedStore.ruleChanges.unshift(change);
+    if(sharedStore.ruleChanges.length>20)sharedStore.ruleChanges.length=20;
+    // Reset dismissed notifications so users see the update
+    sharedStore.dismissedNotifications=[];
+    saveSharedStore();
+    // Notify any logged-in user
+    if(currentUser){
+      showFeedNotification('平台规则已更新(v'+sharedStore.ruleVersion+')，刷新信息流查看适配效果');
+    }
+  }
+}
+
+// ── Feed notification ──
+function showFeedNotification(msg){
+  const container=document.getElementById('feedNotifications');
+  if(!container)return;
+  const notice=document.createElement('div');
+  notice.className='feed-notification';
+  notice.innerHTML=`<span>📢</span><span>${esc(msg)}</span><span class="fn-dismiss" onclick="this.parentElement.remove()">×</span>`;
+  container.prepend(notice);
+}
+
+function checkFeedNotifications(){
+  if(!currentUser)return;
+  // Check for unread rule changes
+  const latestVersion=sharedStore.ruleVersion;
+  if(latestVersion>0&&!sharedStore.dismissedNotifications.includes(latestVersion)){
+    const container=document.getElementById('feedNotifications');
+    if(container&&!container.querySelector('.feed-notification')){
+      showFeedNotification('平台规则已更新(v'+latestVersion+')，刷新信息流查看适配效果');
+    }
+  }
+}
+
+// ── Refresh entire console ──
+function refreshConsole(){
+  loadSharedStore();
+  renderConsoleStats();
+  renderReviewQueue();
+  renderUserPrefsReport();
+  renderPublishedFeed();
+  renderFeedbackSummary();
+  renderRuleChangeHistory();
+  updateComposerUI();
+}
+
+function updateComposerUI(){
+  const notice=document.getElementById('consoleLoggedOutNotice');
+  const composer=document.querySelector('#tab-console .post-composer');
+  const userLabel=document.getElementById('composerUser');
+  if(currentUser){
+    if(notice)notice.style.display='none';
+    if(composer)composer.style.display='block';
+    if(userLabel)userLabel.textContent='@'+currentUser.username;
+  }else{
+    if(notice)notice.style.display='block';
+    if(composer)composer.style.display='none';
+    if(userLabel)userLabel.textContent='未登录';
+  }
+}
+
+// ── Render: stats ──
+function renderConsoleStats(){
+  const pending=sharedStore.posts.filter(p=>p.status==='pending').length;
+  const approved=sharedStore.posts.filter(p=>p.status==='approved'||p.status==='rewritten').length;
+  const rejected=sharedStore.posts.filter(p=>p.status==='rejected').length;
+  const totalUsers=Object.keys(userStore).length;
+  const totalFeedback=sharedStore.feedback.length;
+  const likes=sharedStore.feedback.filter(f=>f.type==='like').length;
+  const dislikes=sharedStore.feedback.filter(f=>f.type==='dislike').length;
+
+  const stats=[
+    {val:totalUsers,label:'注册用户',color:'var(--accent)'},
+    {val:pending,label:'待审核',color:pending?'var(--orange)':'var(--dim)'},
+    {val:approved,label:'已发布',color:'var(--green)'},
+    {val:rejected,label:'已拒绝',color:'var(--red)'},
+    {val:likes,label:'点赞',color:'var(--purple)'},
+    {val:totalFeedback,label:'总反馈',color:'var(--cyan)'},
+  ];
+  document.getElementById('consoleStats').innerHTML=stats.map(s=>
+    `<div class="stat-card"><div class="stat-val" style="color:${s.color}">${s.val}</div><div class="stat-label">${s.label}</div></div>`
+  ).join('');
+  document.getElementById('pendingCount').textContent=pending?'('+pending+')':'';
+  document.getElementById('userReportCount').textContent=totalUsers?'('+totalUsers+')':'';
+  document.getElementById('publishedCount').textContent=approved?'('+approved+')':'';
+}
+
+// ── Render: review queue ──
+function renderReviewQueue(){
+  const container=document.getElementById('reviewQueue');
+  const pending=sharedStore.posts.filter(p=>p.status==='pending');
+  if(!pending.length){
+    container.innerHTML='<div class="empty"><div class="ico">📋</div><div>暂无待审核帖子</div><div class="hint">用户发帖后将出现在这里</div></div>';
+    return;
+  }
+  container.innerHTML=pending.map(p=>{
+    const time=new Date(p.submittedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="review-item pending">
+      <div class="review-meta">
+        <div class="feed-avatar" style="width:20px;height:20px;font-size:10px;background:${avatarColor(p.author)}">${avatarInitial(p.display)}</div>
+        <span style="font-weight:600">${esc(p.display)}</span>
+        <span>@${esc(p.author)}</span>
+        <span>· ${time}</span>
+        <span class="badge b-orange" style="margin-left:auto">待审核</span>
+      </div>
+      <div class="review-content">${esc(p.content)}</div>
+      <div class="review-actions">
+        <button class="btn btn-p btn-sm" onclick="reviewPost('${p.id}','approve')">批准</button>
+        <button class="btn btn-s btn-sm" onclick="reviewPost('${p.id}','rewrite')">AI改写</button>
+        <button class="btn btn-s btn-sm" onclick="reviewPost('${p.id}','reject')" style="color:var(--red)">拒绝</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render: user prefs report (admin sees all users) ──
+function renderUserPrefsReport(){
+  const container=document.getElementById('userPrefsReport');
+  const users=Object.entries(userStore);
+  if(!users.length){
+    container.innerHTML='<div class="empty"><div class="ico">📊</div><div>暂无用户数据</div><div class="hint">用户注册并设置偏好后将显示在这里</div></div>';
+    return;
+  }
+  container.innerHTML=users.map(([username,data])=>{
+    const prefs=data.prefs||defaultPrefs();
+    const prefsStr=[
+      `语气:${prefs.tone}`,
+      `详略:${prefs.detail}`,
+      prefs.excludeSentiments?.length?`排除:${prefs.excludeSentiments.join('/')}`:'',
+      prefs.excludeTopics?`排除主题:${prefs.excludeTopics}`:'',
+      prefs.onlyTopics?`只看:${prefs.onlyTopics}`:'',
+      `级别:${prefs.level||'moderate'}`,
+    ].filter(Boolean).join(' · ');
+    const hasPasskey=data.hasPasskey?'<span class="badge b-green" style="font-size:9px">Passkey</span>':'';
+    return `<div class="prefs-report">
+      <div class="pr-user">
+        <div class="feed-avatar" style="width:20px;height:20px;font-size:10px;background:${avatarColor(username)}">${avatarInitial(data.display||username)}</div>
+        ${esc(data.display||username)} <span style="color:var(--dim);font-weight:400">@${esc(username)}</span> ${hasPasskey}
+      </div>
+      <div class="pr-prefs">${esc(prefsStr)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render: published feed ──
+function renderPublishedFeed(){
+  const container=document.getElementById('publishedFeed');
+  const published=sharedStore.posts.filter(p=>p.status==='approved'||p.status==='rewritten');
+  if(!published.length){
+    container.innerHTML='<div class="empty"><div class="ico">📰</div><div>暂无已发布内容</div><div class="hint">审核通过的帖子将显示在这里</div></div>';
+    return;
+  }
+  container.innerHTML=published.map(p=>{
+    const time=new Date(p.reviewedAt||p.submittedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+    const displayContent=p.status==='rewritten'&&p.reviewedContent?p.reviewedContent:p.content;
+    const rewriteTag=p.status==='rewritten'?'<span class="badge b-blue" style="font-size:9px">AI改写</span>':'';
+    const originalSection=p.status==='rewritten'&&p.reviewedContent&&p.reviewedContent!==p.content
+      ?`<div class="feed-original-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">查看原文</div><div class="feed-original">${esc(p.content)}</div>`:'';
+    // Feedback counts
+    const likes=sharedStore.feedback.filter(f=>f.postId===p.id&&f.type==='like').length;
+    const dislikes=sharedStore.feedback.filter(f=>f.postId===p.id&&f.type==='dislike').length;
+    const userFeedback=currentUser?sharedStore.feedback.find(f=>f.postId===p.id&&f.user===currentUser.username):null;
+
+    return `<div class="feed-item">
+      <div class="feed-item-hdr">
+        <div class="feed-avatar" style="background:${avatarColor(p.author)}">${avatarInitial(p.display)}</div>
+        <div><div style="font-size:13px;font-weight:600">${esc(p.display)} ${rewriteTag}</div><div class="feed-meta">${time} · ${p.reviewNote||'已发布'}</div></div>
+      </div>
+      <div class="feed-item-bdy">${esc(displayContent)}${originalSection}</div>
+      <div class="feedback-bar">
+        <button class="feedback-btn ${userFeedback?.type==='like'?'active':''}" data-pid="${p.id}" data-type="like" onclick="submitFeedback('${p.id}','like')">👍 ${likes||''}</button>
+        <button class="feedback-btn ${userFeedback?.type==='dislike'?'active':''}" data-pid="${p.id}" data-type="dislike" onclick="submitFeedback('${p.id}','dislike')">👎 ${dislikes||''}</button>
+        <button class="feedback-btn" onclick="reportPost('${p.id}')">举报</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Report post ──
+function reportPost(postId){
+  if(!currentUser){showToast('请先登录','error');return}
+  const existing=sharedStore.feedback.find(f=>f.postId===postId&&f.user===currentUser.username&&f.type==='report');
+  if(existing){showToast('已举报过此帖子','info');return}
+  sharedStore.feedback.push({postId,user:currentUser.username,display:currentUser.display,type:'report',time:new Date().toISOString()});
+  saveSharedStore();
+  showToast('已举报，管理员将审核','success');
+  refreshConsole();
+}
+
+// ── Render: feedback summary ──
+function renderFeedbackSummary(){
+  const container=document.getElementById('feedbackSummary');
+  if(!sharedStore.feedback.length){
+    container.innerHTML='<div class="empty"><div class="ico">💬</div><div>暂无反馈</div><div class="hint">用户在信息流中点赞/点踩后将汇总在这里</div></div>';
+    return;
+  }
+  // Group by post
+  const byPost={};
+  sharedStore.feedback.forEach(f=>{
+    if(!byPost[f.postId])byPost[f.postId]={likes:0,dislikes:0,reports:0,post:null};
+    if(f.type==='like')byPost[f.postId].likes++;
+    else if(f.type==='dislike')byPost[f.postId].dislikes++;
+    else if(f.type==='report')byPost[f.postId].reports++;
+  });
+  // Attach post content
+  sharedStore.posts.forEach(p=>{
+    if(byPost[p.id])byPost[p.id].post=p;
+  });
+
+  container.innerHTML=Object.entries(byPost).map(([pid,data])=>{
+    if(!data.post)return'';
+    const content=data.post.status==='rewritten'&&data.post.reviewedContent?data.post.reviewedContent:data.post.content;
+    const short=content.length>50?content.slice(0,50)+'...':content;
+    return `<div class="prefs-report">
+      <div class="pr-user">${esc(data.post.display)} 的帖子</div>
+      <div class="pr-prefs" style="margin-top:4px">
+        <span class="badge b-purple" style="font-size:10px">👍 ${data.likes}</span>
+        <span class="badge b-red" style="font-size:10px">👎 ${data.dislikes}</span>
+        ${data.reports?`<span class="badge b-orange" style="font-size:10px">举报 ${data.reports}</span>`:''}
+        <span style="margin-left:4px">"${esc(short)}"</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render: rule change history ──
+function renderRuleChangeHistory(){
+  const container=document.getElementById('ruleChangeHistory');
+  if(!sharedStore.ruleChanges.length){
+    container.innerHTML='<div class="empty"><div class="ico">📜</div><div>暂无规则变更</div><div class="hint">管理员修改规则后将记录在这里</div></div>';
+    return;
+  }
+  container.innerHTML=sharedStore.ruleChanges.slice(0,10).map(c=>{
+    const time=new Date(c.time).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<div class="rule-notice">
+      <span>v${c.version}</span>
+      <span>规则: ${esc(c.rulesSummary)}</span>
+      <span class="rn-time">${time}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
 //  Init
 // ═══════════════════════════════════════════════════════════
 
@@ -1788,8 +2365,16 @@ setupLevels('adminLevels',()=>document.querySelectorAll('#adminLevels button').f
 
 // User system init
 loadUserStore();
+loadSharedStore();
 checkPasskeySupport();
 updateAuthUI();
+
+// Admin rule change tracking
+lastRules=document.getElementById('adminRules')?.value||'';
+lastVibe=document.getElementById('adminVibe')?.value||'';
+document.getElementById('adminRules')?.addEventListener('change',trackRuleChange);
+document.getElementById('adminVibe')?.addEventListener('change',trackRuleChange);
+document.getElementById('adminRunBtn')?.addEventListener('click',trackRuleChange);
 </script>
 </body>
 </html>
